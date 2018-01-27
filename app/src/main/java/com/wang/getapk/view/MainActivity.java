@@ -22,6 +22,7 @@ import com.wang.baseadapter.model.ItemArray;
 import com.wang.baseadapter.model.ItemData;
 import com.wang.baseadapter.widget.WaveSideBarView;
 import com.wang.getapk.R;
+import com.wang.getapk.presenter.MainActivityPresenter;
 import com.wang.getapk.view.adapter.AppAdapter;
 import com.wang.getapk.constant.Key;
 import com.wang.getapk.view.dialog.BaseDialog;
@@ -30,7 +31,6 @@ import com.wang.getapk.view.dialog.NumberProgressDialog;
 import com.wang.getapk.view.listener.OnPathSelectListener;
 import com.wang.getapk.view.listener.OnRecyclerClickListener;
 import com.wang.getapk.model.App;
-import com.wang.getapk.presenter.MainActivityPresenter;
 import com.wang.getapk.util.CommonPreference;
 
 import butterknife.BindView;
@@ -170,7 +170,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRefresh() {
-        mPresenter.setApps(null);
+        mPresenter.clearApps();
         mToolbar.getMenu().getItem(0).setEnabled(false);
         mDisposables.add(mPresenter.getAndSort(this, mIsSortByTime));
     }
