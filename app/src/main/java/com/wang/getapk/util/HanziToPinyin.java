@@ -493,10 +493,10 @@ public class HanziToPinyin {
     }
 
     public String get(final String input, String separator, boolean onlyFirstUpper){
-        StringBuilder builder = new StringBuilder();
         List<Token> tokens = get(input);
         int size = tokens.size();
         if (size > 0) {
+            StringBuilder builder = new StringBuilder();
             for (int i = 0; i < size; i++) {
                 Token token = tokens.get(i);
                 if (onlyFirstUpper && token.type == Token.PINYIN && token.target.length() > 1){
@@ -509,8 +509,11 @@ public class HanziToPinyin {
                     builder.append(separator);
                 }
             }
+            return builder.toString();
+        }else {
+            return input;
         }
-        return builder.toString();
+
     }
 
     /**
