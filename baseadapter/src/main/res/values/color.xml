@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="side_bar_text_color">#969696</color>
+    <color name="side_bar_background">#F9F9F9</color>
+    <color name="side_bar_wave_color">#be6aa2e2</color>
+    <color name="title_color">#333333</color>
+    <color name="empty_color">#666666</color>
+</resources>

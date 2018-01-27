@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <include layout="@layout/layout_dialog_title" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:layout_marginTop="16dp"
+        android:background="@color/grey300" />
+
+    <com.daimajia.numberprogressbar.NumberProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginTop="30dp"
+        app:progress_current="0"
+        app:progress_max="100"
+        app:progress_reached_color="@color/blue300"
+        app:progress_text_color="@color/blue300" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:layout_marginTop="20dp"
+        android:background="@color/grey300" />
+
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/negative_btn"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackground"
+        android:text="取消" />
+
+</LinearLayout>

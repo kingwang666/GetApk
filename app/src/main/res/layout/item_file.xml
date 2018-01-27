@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.AppCompatTextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/name_tv"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="4dp"
+    android:drawablePadding="8dp"
+    android:paddingTop="4dp"
+    android:textSize="12sp"
+    android:paddingEnd="4dp"
+    android:paddingBottom="4dp"
+    android:background="?attr/selectableItemBackground"
+    android:ellipsize="end"
+    android:gravity="center_vertical"
+    android:lines="1"
+    android:maxLines="1"
+    tools:text="@string/app_name"
+    tools:drawableStart="@drawable/ic_android_green_24dp"/>
+
