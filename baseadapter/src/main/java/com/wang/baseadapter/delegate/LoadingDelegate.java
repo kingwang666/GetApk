@@ -1,6 +1,5 @@
 package com.wang.baseadapter.delegate;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +8,8 @@ import android.widget.TextView;
 
 import com.wang.baseadapter.R;
 import com.wang.baseadapter.model.ItemArray;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created on 2016/6/13.

@@ -1,6 +1,5 @@
 package com.wang.baseadapter;
 
-import android.support.v7.widget.RecyclerView;
 
 import com.wang.baseadapter.model.ItemArray;
 import com.wang.baseadapter.util.SwipeAdapterInterface;
@@ -9,6 +8,8 @@ import com.wang.baseadapter.util.SwipeItemMangerInterface;
 import com.wang.baseadapter.widget.SwipeItemView;
 
 import java.util.List;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 
 public abstract class RecyclerSwipeAdapter extends BaseRecyclerViewAdapter implements SwipeItemMangerInterface, SwipeAdapterInterface {

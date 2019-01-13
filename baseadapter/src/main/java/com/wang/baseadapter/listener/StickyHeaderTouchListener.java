@@ -1,12 +1,12 @@
 package com.wang.baseadapter.listener;
 
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.view.ViewGroup;
 
 import com.wang.baseadapter.StickyHeaderDecoration;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by wang

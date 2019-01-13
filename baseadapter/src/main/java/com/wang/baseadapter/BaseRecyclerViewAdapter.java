@@ -1,9 +1,6 @@
 package com.wang.baseadapter;
 
 
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.ViewGroup;
 
 import com.wang.baseadapter.delegate.AdapterDelegatesManager;
@@ -11,6 +8,10 @@ import com.wang.baseadapter.delegate.LoadingDelegate;
 import com.wang.baseadapter.model.ItemArray;
 
 import java.util.List;
+
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 
 public abstract class BaseRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {

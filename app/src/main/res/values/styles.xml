@@ -8,6 +8,11 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <!--<item name="toolbarNavigationButtonStyle">@style/Widget.AppCompat.Toolbar.Button.Navigation.Wang</item>-->
+    </style>
+
+    <style name="Widget.AppCompat.Toolbar.Button.Navigation.Wang">
+        <item name="android:minWidth">30dp</item>
     </style>
 
     <style name="ToolbarTitleStyle" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">

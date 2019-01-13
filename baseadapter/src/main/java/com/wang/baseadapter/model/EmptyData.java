@@ -1,6 +1,6 @@
 package com.wang.baseadapter.model;
 
-import android.support.annotation.DrawableRes;
+import androidx.annotation.DrawableRes;
 
 /**
  * Created by wang

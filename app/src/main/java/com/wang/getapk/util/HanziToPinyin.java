@@ -328,7 +328,7 @@ public class HanziToPinyin {
     private static final String FIRST_PINYIN_UNIHAN = "\u963F";
     private static final String LAST_PINYIN_UNIHAN = "\u9FFF";
 
-    private static final Collator COLLATOR = Collator.getInstance(Locale.CHINA);
+    private static final Collator COLLATOR = Collator.getInstance(Locale.CHINESE);
 
     private static HanziToPinyin sInstance;
     private final boolean mHasChinaCollator;
@@ -375,7 +375,7 @@ public class HanziToPinyin {
             // Check if zh_CN collation data is available
             final Locale locale[] = Collator.getAvailableLocales();
             for (int i = 0; i < locale.length; i++) {
-                if (locale[i].equals(Locale.CHINA)) {
+                if (locale[i].equals(Locale.CHINESE)) {
                     // Do self validation just once.
                     if (DEBUG) {
                         Log.d(TAG, "Self validation. Result: " + doSelfValidation());
@@ -384,12 +384,7 @@ public class HanziToPinyin {
                     return sInstance;
                 }
             }
-            if (sInstance == null){//这个判断是用于处理国产ROM的兼容性问题
-                if (Locale.CHINA.equals(Locale.getDefault())){
-                    sInstance = new HanziToPinyin(true);
-                    return sInstance;
-                }
-            }
+
             Log.w(TAG, "There is no Chinese collator, HanziToPinyin is disabled");
             sInstance = new HanziToPinyin(false);
             return sInstance;
@@ -493,10 +488,10 @@ public class HanziToPinyin {
     }
 
     public String get(final String input, String separator, boolean onlyFirstUpper){
+        StringBuilder builder = new StringBuilder();
         List<Token> tokens = get(input);
         int size = tokens.size();
         if (size > 0) {
-            StringBuilder builder = new StringBuilder();
             for (int i = 0; i < size; i++) {
                 Token token = tokens.get(i);
                 if (onlyFirstUpper && token.type == Token.PINYIN && token.target.length() > 1){
@@ -509,11 +504,8 @@ public class HanziToPinyin {
                     builder.append(separator);
                 }
             }
-            return builder.toString();
-        }else {
-            return input;
         }
-
+        return builder.toString();
     }
 
     /**

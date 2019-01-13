@@ -1,11 +1,12 @@
 package com.wang.baseadapter.delegate;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 
 import com.wang.baseadapter.model.ItemArray;
 
 import java.util.List;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 
 public abstract class AdapterDelegate<VH extends RecyclerView.ViewHolder> {
