@@ -1,47 +1,19 @@
 <resources>
-    <string name="app_name">APK提取工具</string>
-    <string name="confirm">确认</string>
-    <string name="system">系统</string>
-    <string name="third_party">第三方</string>
+    <string name="app_name">APP Detail</string>
+    <string name="confirm">Confirm</string>
+    <string name="system">System</string>
+    <string name="third_party">Third party</string>
     <string name="debug">DEBUG</string>
     <string name="release">RELEASE</string>
-    <string name="sort">切换排序</string>
-    <string name="rationale_storage">拒绝将无法读写存储</string>
-    <string name="error_storage">获取权限失败</string>
-    <string name="allow">允许</string>
-    <string name="deny">拒绝</string>
-    <string name="warning">警告</string>
-    <string name="new_create">新建</string>
-    <string name="new_create_folder">新建文件夹</string>
-    <string name="cancel">取消</string>
+    <string name="sort">Sort</string>
+    <string name="rationale_storage">Refuse to read and write storage</string>
+    <string name="error_storage">Failed to get permission</string>
+    <string name="allow">Allow</string>
+    <string name="deny">Deny</string>
+    <string name="warning">Warning</string>
+    <string name="new_create">Create</string>
+    <string name="new_create_folder">New folder</string>
+    <string name="cancel">Cancel</string>
 
-    <array name="letters">
-        <item>A</item>
-        <item>B</item>
-        <item>C</item>
-        <item>D</item>
-        <item>E</item>
-        <item>F</item>
-        <item>G</item>
-        <item>H</item>
-        <item>I</item>
-        <item>J</item>
-        <item>K</item>
-        <item>L</item>
-        <item>M</item>
-        <item>N</item>
-        <item>O</item>
-        <item>P</item>
-        <item>Q</item>
-        <item>R</item>
-        <item>S</item>
-        <item>T</item>
-        <item>U</item>
-        <item>V</item>
-        <item>W</item>
-        <item>X</item>
-        <item>Y</item>
-        <item>Z</item>
-        <item>\u0023</item>
-    </array>
+
 </resources>
