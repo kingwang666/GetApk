@@ -4,11 +4,6 @@ package com.wang.getapk.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import java.lang.reflect.Type;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 /**
  * Created by wang on 12/23/15.通用存储类
  */

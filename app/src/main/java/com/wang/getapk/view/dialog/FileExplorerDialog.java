@@ -1,7 +1,25 @@
-package com.wang.getapk.dialog;
+package com.wang.getapk.view.dialog;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.Environment;
+import android.text.TextUtils;
+import android.view.MenuItem;
+
+import com.wang.getapk.R;
+import com.wang.getapk.constant.Key;
+import com.wang.getapk.constant.Path;
+import com.wang.getapk.model.FileItem;
+import com.wang.getapk.presenter.FileExplorerDialogPresenter;
+import com.wang.getapk.util.CommonPreference;
+import com.wang.getapk.util.FileUtil;
+import com.wang.getapk.view.adapter.FileAdapter;
+import com.wang.getapk.view.listener.OnPathSelectListener;
+import com.wang.getapk.view.listener.OnRecyclerClickListener;
+
+import java.io.File;
+import java.io.IOException;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
@@ -10,25 +28,6 @@ import androidx.appcompat.app.AppCompatDialog;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.appcompat.widget.Toolbar;
-
-import android.os.Environment;
-import android.text.TextUtils;
-import android.view.MenuItem;
-
-import com.wang.getapk.listener.OnPathSelectListener;
-import com.wang.getapk.presenter.FileExplorerDialogPresenter;
-import com.wang.getapk.util.CommonPreference;
-import com.wang.getapk.util.FileUtil;
-import com.wang.getapk.adapter.FileAdapter;
-import com.wang.getapk.constant.Key;
-import com.wang.getapk.listener.OnRecyclerClickListener;
-import com.wang.getapk.constant.Path;
-import com.wang.getapk.R;
-import com.wang.getapk.model.FileItem;
-
-import java.io.File;
-import java.io.IOException;
-
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
@@ -70,6 +69,7 @@ public class FileExplorerDialog extends BaseDialog<FileExplorerDialog.Builder>
             mToolbar.inflateMenu(R.menu.menu_dialog_file_explorer);
             mToolbar.setOnMenuItemClickListener(this);
         }
+        mToolbar.setTitle(builder.title);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(context));
         mRecyclerView.setAdapter(new FileAdapter(mPresenter.getFileItems(), this));
         mRecyclerView.setHasFixedSize(true);

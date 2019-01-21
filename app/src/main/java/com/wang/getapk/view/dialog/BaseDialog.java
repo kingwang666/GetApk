@@ -1,20 +1,19 @@
-package com.wang.getapk.dialog;
+package com.wang.getapk.view.dialog;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.View;
+import android.widget.Button;
+
+import com.wang.getapk.R;
+
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDialog;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.AppCompatTextView;
-import android.text.TextUtils;
-import android.view.View;
-import android.widget.Button;
-
-
-import com.wang.getapk.R;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;

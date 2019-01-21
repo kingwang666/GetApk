@@ -10,11 +10,15 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.os.Build;
+
 import androidx.core.content.ContextCompat;
+
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 
 import com.wang.baseadapter.R;
 
@@ -57,6 +61,9 @@ public class WaveSideBarView extends View {
     private int mPadding;
     private int mLettersMaxLength;
 
+    private boolean mAutoHide = false;
+    private int mShowDuration = 3000;
+
     // 波浪路径
     private Path mWavePath = new Path();
 
@@ -73,6 +80,14 @@ public class WaveSideBarView extends View {
     private int mBallRadius;
     // 用于过渡效果计算
     ValueAnimator mRatioAnimator;
+    //显示和隐藏动画
+    ValueAnimator mShowHideAnimator;
+    //是否显示
+    private boolean mShowing = true;
+    //x偏移量
+    private float mTranslateX = 0;
+
+    private RectF mLettersRect = new RectF();
 
     // 用于绘制贝塞尔曲线的比率
     private float mRatio;
@@ -82,6 +97,13 @@ public class WaveSideBarView extends View {
 
     // 圆形中心点X
     private float mBallCentreX;
+
+    private Runnable mHide = new Runnable() {
+        @Override
+        public void run() {
+            hide(true);
+        }
+    };
 
     public WaveSideBarView(Context context) {
         this(context, null);
@@ -139,6 +161,9 @@ public class WaveSideBarView extends View {
             mRadius = a.getDimensionPixelSize(R.styleable.WaveSideBarView_sidebarRadius, context.getResources().getDimensionPixelSize(R.dimen.radius_sidebar));
             mBallRadius = a.getDimensionPixelSize(R.styleable.WaveSideBarView_sidebarBallRadius, context.getResources().getDimensionPixelSize(R.dimen.ball_radius_sidebar));
             mLettersMaxLength = a.getInteger(R.styleable.WaveSideBarView_sidebarLettersMaxLength, 1);
+            mAutoHide = a.getBoolean(R.styleable.WaveSideBarView_sidebarAutoHide, mAutoHide);
+            mShowDuration = a.getInteger(R.styleable.WaveSideBarView_sidebarShowDuration, mShowDuration);
+            mShowing = a.getBoolean(R.styleable.WaveSideBarView_sidebarShow, mShowing);
             CharSequence[] letters = a.getTextArray(R.styleable.WaveSideBarView_sidebarLetters);
             mLetters = new ArrayList<>();
             if (letters != null) {
@@ -161,10 +186,25 @@ public class WaveSideBarView extends View {
         mTextPaint.setStyle(Paint.Style.FILL);
         mTextPaint.setTextSize(mLargeTextSize);
         mTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        if (mShowing && mAutoHide) {
+            getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    getViewTreeObserver().removeOnPreDrawListener(this);
+                    if (mShowing){
+                        removeCallbacks(mHide);
+                        postDelayed(mHide, mShowDuration);
+                    }
+                    return true;
+                }
+            });
+        }
     }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
+
         final float y = event.getY();
         final float x = event.getX();
 
@@ -173,20 +213,28 @@ public class WaveSideBarView extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-
                 if (x < mWidth - 2 * mRadius) {
                     return false;
                 }
+                removeCallbacks(mHide);
+                if (!mShowing) {
+                    if (mRatioAnimator != null && mRatioAnimator.isRunning() && mTranslateX == 0f) {
+                        mShowing = true;
+                    } else {
+                        show(true);
+                    }
+                }
                 mCenterY = (int) y;
-                startAnimator(mRatio, 1.0f);
+                startRatioAnimator(mRatio, 1.0f);
                 break;
             case MotionEvent.ACTION_MOVE:
+                removeCallbacks(mHide);
 
                 mCenterY = (int) y;
                 if (oldChoose != newChoose) {
                     if (newChoose >= 0 && newChoose < mLetters.size()) {
                         mChoose = newChoose;
-                        if (listener != null) {
+                        if (listener != null && mTranslateX == 0f) {
                             listener.onLetterChange(mLetters.get(newChoose));
                         }
                     }
@@ -195,15 +243,16 @@ public class WaveSideBarView extends View {
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-
-                startAnimator(mRatio, 0f);
+                startRatioAnimator(mRatio, 0f);
                 mChoose = -1;
                 break;
             default:
                 break;
         }
+
         return true;
     }
+
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -212,6 +261,16 @@ public class WaveSideBarView extends View {
         mWidth = getMeasuredWidth();
         mItemHeight = (mHeight - mPadding) / mLetters.size();
         mPosX = mWidth - (1.1f + (float) mLettersMaxLength / 2) * mTextSize;
+
+        mLettersRect.left = mPosX - mTextSize * ((float) mLettersMaxLength + 1) / 2;
+        mLettersRect.right = mPosX + mTextSize * ((float) mLettersMaxLength + 1) / 2;
+        mLettersRect.top = mTextSize / 2;
+        mLettersRect.bottom = mHeight - mTextSize / 2;
+
+        if (!mShowing) {
+            mRatio = 0f;
+            mTranslateX = mWidth - mLettersRect.left + mTextSize * 0.6f;
+        }
     }
 
     @Override
@@ -232,24 +291,19 @@ public class WaveSideBarView extends View {
     }
 
     private void drawLetters(Canvas canvas) {
-
-        RectF rectF = new RectF();
-        rectF.left = mPosX - mTextSize * ((float) mLettersMaxLength + 1) / 2;
-        rectF.right = mPosX + mTextSize * ((float) mLettersMaxLength + 1) / 2;
-        rectF.top = mTextSize / 2;
-        rectF.bottom = mHeight - mTextSize / 2;
-
+        canvas.save();
+        canvas.translate(mTranslateX, 0);
         mLettersPaint.reset();
         mLettersPaint.setStyle(Paint.Style.FILL);
         mLettersPaint.setColor(mBarColor);
         mLettersPaint.setAntiAlias(true);
-        canvas.drawRoundRect(rectF, mTextSize, mTextSize, mLettersPaint);
+        canvas.drawRoundRect(mLettersRect, mTextSize, mTextSize, mLettersPaint);
 
         mLettersPaint.reset();
         mLettersPaint.setStyle(Paint.Style.STROKE);
         mLettersPaint.setColor(mTextColor);
         mLettersPaint.setAntiAlias(true);
-        canvas.drawRoundRect(rectF, mTextSize, mTextSize, mLettersPaint);
+        canvas.drawRoundRect(mLettersRect, mTextSize, mTextSize, mLettersPaint);
 
         for (int i = 0; i < mLetters.size(); i++) {
             mLettersPaint.reset();
@@ -269,7 +323,7 @@ public class WaveSideBarView extends View {
                 canvas.drawText(mLetters.get(i), mPosX, posY, mLettersPaint);
             }
         }
-
+        canvas.restore();
     }
 
     private void drawChooseText(Canvas canvas) {
@@ -343,8 +397,74 @@ public class WaveSideBarView extends View {
 
     }
 
+    public void hideAfterTime() {
+        removeCallbacks(mHide);
+        postDelayed(mHide, mShowDuration);
+    }
 
-    private void startAnimator(float... value) {
+    public void hide() {
+        hide(true);
+    }
+
+    public void hide(boolean anim) {
+        removeCallbacks(mHide);
+        if (mShowing) {
+            if (anim) {
+                if ((mRatioAnimator == null || !mRatioAnimator.isRunning()) && mTranslateX != mWidth - mLettersRect.left + mTextSize * 0.6f) {
+                    startShowHideAnimator(mTranslateX, mWidth - mLettersRect.left + mTextSize * 0.6f);
+                }
+            } else {
+                if (mRatioAnimator != null && mRatioAnimator.isRunning()) {
+                    mRatioAnimator.cancel();
+                }
+                if (mShowHideAnimator != null && mShowHideAnimator.isRunning()) {
+                    mShowHideAnimator.cancel();
+                }
+                if (mRatio != 0f || mTranslateX != mWidth - mLettersRect.left + mTextSize * 0.6f) {
+                    mRatio = 0f;
+                    mTranslateX = mWidth - mLettersRect.left + mTextSize * 0.6f;
+                    invalidate();
+                }
+            }
+        }
+        mShowing = false;
+    }
+
+    public void showAfterHide() {
+        show(true);
+        postDelayed(mHide, mShowDuration);
+    }
+
+    public void show() {
+        show(true);
+    }
+
+    public void show(boolean anim) {
+        removeCallbacks(mHide);
+        if (!mShowing) {
+            if (anim) {
+                if (mTranslateX != 0f) {
+                    startShowHideAnimator(mTranslateX, 0);
+                }
+            } else {
+                if (mRatioAnimator != null && mRatioAnimator.isRunning()) {
+                    mRatioAnimator.cancel();
+                }
+                if (mShowHideAnimator != null && mShowHideAnimator.isRunning()) {
+                    mShowHideAnimator.cancel();
+                }
+                if (mRatio != 1f || mTranslateX != 0f) {
+                    mRatio = 1f;
+                    mTranslateX = 0f;
+                    invalidate();
+                }
+            }
+        }
+        mShowing = true;
+    }
+
+
+    private void startRatioAnimator(float... value) {
         if (mRatioAnimator == null) {
             mRatioAnimator = new ValueAnimator();
         }
@@ -362,11 +482,35 @@ public class WaveSideBarView extends View {
                             listener.onLetterChange(mLetters.get(newChoose));
                         }
                     }
+                } else if (mRatio == 0f) {
+                    if (!mShowing && mShowHideAnimator != null && !mShowHideAnimator.isRunning()) {
+                        startShowHideAnimator(mTranslateX, mWidth - mLettersRect.left + mTextSize * 0.6f);
+                    } else if (mAutoHide) {
+                        removeCallbacks(mHide);
+                        postDelayed(mHide, mShowDuration);
+                    }
                 }
                 invalidate();
             }
         });
         mRatioAnimator.start();
+    }
+
+
+    private void startShowHideAnimator(float... value) {
+        if (mShowHideAnimator == null) {
+            mShowHideAnimator = new ValueAnimator();
+        }
+        mShowHideAnimator.cancel();
+        mShowHideAnimator.setFloatValues(value);
+        mShowHideAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator value) {
+                mTranslateX = (float) value.getAnimatedValue();
+                invalidate();
+            }
+        });
+        mShowHideAnimator.start();
     }
 
 

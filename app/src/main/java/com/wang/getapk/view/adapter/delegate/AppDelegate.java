@@ -1,11 +1,8 @@
-package com.wang.getapk.adapter.delegate;
+package com.wang.getapk.view.adapter.delegate;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.widget.AppCompatImageView;
-import androidx.appcompat.widget.AppCompatTextView;
 import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,13 +11,15 @@ import android.view.ViewGroup;
 import com.wang.baseadapter.delegate.AdapterDelegate;
 import com.wang.baseadapter.model.ItemArray;
 import com.wang.getapk.R;
-import com.wang.getapk.adapter.AppAdapter;
 import com.wang.getapk.model.App;
-import com.wang.getapk.listener.OnRecyclerClickListener;
+import com.wang.getapk.view.adapter.AppAdapter;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
 
+import androidx.appcompat.widget.AppCompatImageView;
+import androidx.appcompat.widget.AppCompatTextView;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;

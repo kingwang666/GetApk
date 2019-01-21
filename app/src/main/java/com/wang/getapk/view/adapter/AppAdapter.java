@@ -1,15 +1,12 @@
-package com.wang.getapk.adapter;
+package com.wang.getapk.view.adapter;
 
 import android.view.View;
 
 import com.wang.baseadapter.BaseRecyclerViewAdapter;
 import com.wang.baseadapter.model.ItemArray;
-import com.wang.getapk.adapter.delegate.AppDelegate;
-import com.wang.getapk.adapter.delegate.StickyDelegate;
-import com.wang.getapk.listener.OnRecyclerClickListener;
 import com.wang.getapk.model.App;
-
-import androidx.appcompat.widget.AppCompatImageView;
+import com.wang.getapk.view.adapter.delegate.AppDelegate;
+import com.wang.getapk.view.adapter.delegate.StickyDelegate;
 
 /**
  * Author: wangxiaojie6

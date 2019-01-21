@@ -1,4 +1,4 @@
-package com.wang.getapk.listener;
+package com.wang.getapk.view.listener;
 
 /**
  * Author: wangxiaojie6

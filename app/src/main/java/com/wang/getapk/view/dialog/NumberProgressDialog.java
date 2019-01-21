@@ -1,7 +1,6 @@
-package com.wang.getapk.dialog;
+package com.wang.getapk.view.dialog;
 
 import android.content.Context;
-import android.widget.ProgressBar;
 
 import com.daimajia.numberprogressbar.NumberProgressBar;
 import com.wang.getapk.R;
@@ -15,15 +14,24 @@ import butterknife.BindView;
  * Date: 2018/1/26
  */
 
-public class ProgressDialog extends BaseDialog<ProgressDialog.Builder> {
+public class NumberProgressDialog extends BaseDialog<NumberProgressDialog.Builder> {
 
-    private ProgressDialog(Builder builder) {
+    @BindView(R.id.progress_bar)
+    NumberProgressBar mProgressBar;
+
+    private NumberProgressDialog(Builder builder) {
         super(builder);
     }
 
     @Override
     protected int getLayoutId() {
-        return R.layout.dialog_progress;
+        return R.layout.dialog_number_progress;
+    }
+
+    public void setProgress(int progress){
+        if (mProgressBar != null) {
+            mProgressBar.setProgress(progress);
+        }
     }
 
     @Override
@@ -38,13 +46,13 @@ public class ProgressDialog extends BaseDialog<ProgressDialog.Builder> {
         }
 
         @UiThread
-        public ProgressDialog build() {
-            return new ProgressDialog(this);
+        public NumberProgressDialog build() {
+            return new NumberProgressDialog(this);
         }
 
         @UiThread
-        public ProgressDialog show() {
-            ProgressDialog dialog = build();
+        public NumberProgressDialog show() {
+            NumberProgressDialog dialog = build();
             dialog.show();
             return dialog;
         }

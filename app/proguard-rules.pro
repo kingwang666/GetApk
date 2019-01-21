@@ -1,13 +1,9 @@
 # Add project specific ProGuard rules here.
-# By default, the flags in this file are appended to flags specified
-# in D:\Tools\Sdk/tools/proguard/proguard-android.txt
-# You can edit the include path and order by changing the proguardFiles
-# directive in build.gradle.
+# You can control the set of applied configuration files using the
+# proguardFiles setting in build.gradle.
 #
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
-
-# Add any project specific keep options here:
 
 # If your project uses WebView with JS, uncomment the following
 # and specify the fully qualified class name to the JavaScript interface
@@ -16,7 +12,13 @@
 #   public *;
 #}
 
+# Uncomment this to preserve the line number information for
+# debugging stack traces.
+#-keepattributes SourceFile,LineNumberTable
 
+# If you keep the line number information, uncomment this to
+# hide the original source file name.
+#-renamesourcefileattribute SourceFile
 #-------------------------------------------基础混淆 start------------------------------------------
 #shrink，测试后发现会将一些无效代码给移除，即没有被显示调用的代码，该选项 表示 不启用 shrink。
 -dontshrink
@@ -67,7 +69,6 @@
 -keep public class * extends android.content.ContentProvider
 -keep public class * extends android.app.backup.BackupAgentHelper
 -keep public class * extends android.preference.Preference
--keep public class * extends java.lang.annotation.Annotation{ *; }
 -keep public class com.android.vending.licensing.ILicensingService
 #如果有引用v4包可以添加下面这行
 -keep public class * extends android.support.v4.app.Fragment
@@ -78,39 +79,6 @@
 -keep class android.support.v7.**{ *; }
 -keep class android.webkit.**{*;}
 -keep interface android.support.v4.app.** { *; }
-
-#AndroidX
--keep public class * extends androidx.fragment.app.Fragment
--keep class androidx.core.**{ *; }
--keep class androidx.fragment.**{ *; }
--keep class androidx.loader.**{ *; }
--keep class androidx.localbroadcastmanager.**{ *; }
--keep class androidx.androidx.legacy.**{ *; }
--keep class androidx.media.**{ *; }
--keep class androidx.print.**{ *; }
--keep class androidx.documentfile.**{ *; }
--keep class androidx.collection.**{ *; }
--keep class androidx.customview.**{ *; }
--keep class androidx.interpolator.**{ *; }
--keep class androidx.asynclayoutinflater.**{ *; }
--keep class androidx.viewpager.**{ *; }
--keep class androidx.swiperefreshlayout.**{ *; }
--keep class androidx.cursoradapter.**{ *; }
--keep class androidx.legacy.**{ *; }
--keep class androidx.slidingpanelayout.**{ *; }
--keep class androidx.coordinatorlayout.**{ *; }
--keep class androidx.appcompat.**{ *; }
--keep class androidx.mediarouter.**{ *; }
--keep class androidx.palette.**{ *; }
--keep class androidx.gridlayout.**{ *; }
--keep class androidx.preference.**{ *; }
--keep class androidx.recyclerview.**{ *; }
--keep class androidx.cardview.**{ *; }
--keep interface androidx.core.app.** { *; }
--keep interface androidx.fragment.app.** { *; }
--keep interface androidx.legacy.app.** { *; }
--keep interface androidx.loader.app.** { *; }
-
 #保持 本化方法及其类声明
 -keepclasseswithmembers class * {
     native <methods>;
@@ -127,10 +95,6 @@
 # 保持自定义控件类不被混淆
 -keepclasseswithmembers class * {
     public <init>(android.content.Context, android.util.AttributeSet, int);
-}
-# 保持自定义控件类不被混淆
--keepclasseswithmembers class * {
-    public <init>(android.content.Context, android.util.AttributeSet, int, int);
 }
 #保持Activity的子类成员：参数为一个View类型的方法   如setContentView(View v)
 -keepclassmembers class * extends android.app.Activity {
@@ -181,28 +145,6 @@
  }
 #-------------------------------------------rxjava&android end--------------------------------------
 
-#-------------------------------------------retrofiy start------------------------------------------
-# Retrofit does reflection on generic parameters and InnerClass is required to use Signature.
--keepattributes Signature, InnerClasses
-
-# Retain service method parameters when optimizing.
--keepclassmembers,allowshrinking,allowobfuscation interface * {
-    @retrofit2.http.* <methods>;
-}
-
-# Ignore annotation used for build tooling.
--dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
-
-# Ignore JSR 305 annotations for embedding nullability information.
--dontwarn javax.annotation.**
-
-# Guarded by a NoClassDefFoundError try/catch and only used when on the classpath.
--dontwarn kotlin.Unit
-
-# Top-level functions that can only be used by Kotlin.
--dontwarn retrofit2.-KotlinExtensions
-#-------------------------------------------retrofit end--------------------------------------------
-
 #-------------------------------------------butterKnife start---------------------------------------
 -keep class butterknife.** { *; }
 -dontwarn butterknife.internal.**
@@ -217,87 +159,13 @@
 }
 #-------------------------------------------butterKnife end-----------------------------------------
 
-#-------------------------------------------leakcanary start----------------------------------------
--keep class org.eclipse.mat.** { *; }
--keep class com.squareup.leakcanary.** { *; }
-#-------------------------------------------leakcanary end------------------------------------------
-
-#-------------------------------------------okhttp start--------------------------------------------
--dontwarn okio.**
--keep class okio.**{*;}
--keep interface okio.**{*;}
-
--keep class com.squareup.okhttp.** { *; }
--keep interface com.squareup.okhttp.** { *; }
--dontwarn com.squareup.okhttp.**
-
--dontwarn okhttp3.**
--keep class okhttp3.**{*;}
--keep interface okhttp3.**{*;}
-#-------------------------------------------okhttp end----------------------------------------------
-
-
-
 #--------------------------------------webview js交互 start-----------------------------------------
 -keepattributes JavascriptInterface
 
 -keep class android.webkit.JavascriptInterface {*;}
 #--------------------------------------webview js交互 end-------------------------------------------
 
-
--keep public class * implements com.bumptech.glide.module.GlideModule
--keep public class * extends com.bumptech.glide.module.AppGlideModule
--keep public enum com.bumptech.glide.load.resource.bitmap.ImageHeaderParser$** {
-  **[] $VALUES;
-  public *;
-}
--keep class com.bumptech.glide.integration.okhttp.OkHttpGlideModule
--keep class com.hikvision.board.glide.MyGildeModule
-
--dontwarn com.mstar.**
--keep class com.mstar.android.tvapi.hikvision.**{ *; }
-
-#-------------------------------------------gson start----------------------------------------------
--dontwarn com.google.**
--keep class com.google.gson.** {*;}
--keep class sun.misc.Unsafe { *; }
--keep class com.google.**{*;}
-#-------------------------------------------gson end------------------------------------------------
-
-# for DexGuard only
-#-keepresourcexmlelements manifest/application/meta-data@value=GlideModule
--dontwarn kotlin.**
-
--assumenosideeffects class kotlin.jvm.internal.Intrinsics {
-    static void checkParameterIsNotNull(java.lang.Object, java.lang.String);
-}
-
--dontwarn java.awt.**
--dontwarn java.beans.Beans
--dontwarn javax.security.**
-
--keep class javamail.** {*;}
--keep class javax.mail.** {*;}
--keep class javax.activation.** {*;}
-
--keep class com.sun.mail.dsn.** {*;}
--keep class com.sun.mail.handlers.** {*;}
--keep class com.sun.mail.smtp.** {*;}
--keep class com.sun.mail.util.** {*;}
--keep class mailcap.** {*;}
--keep class mimetypes.** {*;}
--keep class myjava.awt.datatransfer.** {*;}
--keep class org.apache.harmony.awt.** {*;}
--keep class org.apache.harmony.misc.** {*;}
-
--keep class com.hikvision.board.httpserver.model.** {*;}
-
--keep class com.rxjavahttprequest.model.** {*;}
-
-
--keepclassmembernames class kotlinx.** {
-    volatile <fields>;
-}
--keepnames class kotlinx.** { *; }
-
--keep class com.ibm.icu.**{*;}
+#-------------------------------------------model start---------------------------------------------
+-keep class com.wang.getapk.model.** {*;}
+-keep class com.wang.baseadapter.model.** {*;}
+#-------------------------------------------model end-----------------------------------------------

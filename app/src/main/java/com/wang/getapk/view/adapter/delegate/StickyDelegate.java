@@ -1,6 +1,5 @@
-package com.wang.getapk.adapter.delegate;
+package com.wang.getapk.view.adapter.delegate;
 
-import androidx.appcompat.widget.AppCompatTextView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +10,7 @@ import com.wang.getapk.R;
 import com.wang.getapk.model.App;
 import com.wang.getapk.model.StickyTime;
 
+import androidx.appcompat.widget.AppCompatTextView;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;

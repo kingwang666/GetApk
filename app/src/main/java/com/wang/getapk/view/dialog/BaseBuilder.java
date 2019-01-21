@@ -1,13 +1,14 @@
-package com.wang.getapk.dialog;
+package com.wang.getapk.view.dialog;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.view.WindowManager;
+
 import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
-import android.view.WindowManager;
 
 /**
  * Author: wangxiaojie6

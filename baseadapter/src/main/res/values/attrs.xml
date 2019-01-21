@@ -11,6 +11,9 @@
         <attr name="sidebarBallRadius" format="dimension"/>
         <attr name="sidebarLetters" format="reference"/>
         <attr name="sidebarLettersMaxLength" format="integer"/>
+        <attr name="sidebarShow" format="boolean"/>
+        <attr name="sidebarAutoHide" format="boolean"/>
+        <attr name="sidebarShowDuration" format="integer"/>
     </declare-styleable>
 
     <bool name="is_rtl">true</bool>

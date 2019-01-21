@@ -1,18 +1,17 @@
-package com.wang.getapk.adapter;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.widget.AppCompatTextView;
+package com.wang.getapk.view.adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.wang.getapk.R;
-import com.wang.getapk.listener.OnRecyclerClickListener;
 import com.wang.getapk.model.FileItem;
+import com.wang.getapk.view.listener.OnRecyclerClickListener;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.AppCompatTextView;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;

@@ -15,6 +15,6 @@ public class TimeComparator implements Comparator<ItemData> {
     public int compare(ItemData data1, ItemData data2) {
         long time1 = ((App) data1.getData()).lastUpdateTime;
         long time2 = ((App) data2.getData()).lastUpdateTime;
-        return (time1 < time2) ? 1 : ((time1 == time2) ? 0 : -1);
+        return Long.compare(time2, time1);
     }
 }

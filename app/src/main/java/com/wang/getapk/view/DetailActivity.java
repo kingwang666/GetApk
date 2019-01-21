@@ -1,4 +1,4 @@
-package com.wang.getapk;
+package com.wang.getapk.view;
 
 import android.Manifest;
 import android.content.ComponentName;
@@ -11,25 +11,23 @@ import android.graphics.drawable.Drawable;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.text.format.Formatter;
-import android.util.Log;
-import android.view.PixelCopy;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.wang.getapk.dialog.BaseDialog;
-import com.wang.getapk.dialog.FileExplorerDialog;
-import com.wang.getapk.dialog.NumberProgressDialog;
-import com.wang.getapk.listener.OnPathSelectListener;
+import com.wang.getapk.R;
 import com.wang.getapk.model.App;
 import com.wang.getapk.model.Sign;
 import com.wang.getapk.presenter.DetailActivityPresenter;
 import com.wang.getapk.util.DrawableHelper;
 import com.wang.getapk.util.SizeUtil;
+import com.wang.getapk.view.dialog.BaseDialog;
+import com.wang.getapk.view.dialog.FileExplorerDialog;
+import com.wang.getapk.view.dialog.NumberProgressDialog;
+import com.wang.getapk.view.listener.OnPathSelectListener;
 
 import java.io.File;
 import java.util.Locale;
@@ -214,6 +212,7 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
     })
     public void showFileExplorer(final App app) {
         new FileExplorerDialog.Builder(this)
+                .title("请选择保存路径")
                 .pathSelectListener(new OnPathSelectListener() {
                     @Override
                     public void onSelected(String path) {

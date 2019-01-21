@@ -1,4 +1,4 @@
-package com.wang.getapk;
+package com.wang.getapk.view;
 
 import android.Manifest;
 import android.content.DialogInterface;
@@ -15,24 +15,23 @@ import com.wang.baseadapter.listener.StickyHeaderTouchListener;
 import com.wang.baseadapter.model.ItemArray;
 import com.wang.baseadapter.model.ItemData;
 import com.wang.baseadapter.widget.WaveSideBarView;
-import com.wang.getapk.adapter.AppAdapter;
+import com.wang.getapk.R;
 import com.wang.getapk.constant.Key;
-import com.wang.getapk.dialog.BaseDialog;
-import com.wang.getapk.dialog.FileExplorerDialog;
-import com.wang.getapk.dialog.NumberProgressDialog;
-import com.wang.getapk.dialog.ProgressDialog;
-import com.wang.getapk.listener.OnPathSelectListener;
 import com.wang.getapk.model.App;
 import com.wang.getapk.presenter.MainActivityPresenter;
 import com.wang.getapk.util.CommonPreference;
+import com.wang.getapk.view.adapter.AppAdapter;
+import com.wang.getapk.view.dialog.BaseDialog;
+import com.wang.getapk.view.dialog.FileExplorerDialog;
+import com.wang.getapk.view.dialog.NumberProgressDialog;
+import com.wang.getapk.view.dialog.ProgressDialog;
+import com.wang.getapk.view.listener.OnPathSelectListener;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatTextView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityOptionsCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.util.Pair;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -51,6 +50,7 @@ import permissions.dispatcher.RuntimePermissions;
 public class MainActivity extends AppCompatActivity
         implements AppAdapter.OnAppClickListener,
         Toolbar.OnMenuItemClickListener,
+
         SwipeRefreshLayout.OnRefreshListener,
         WaveSideBarView.OnTouchLetterChangeListener,
         OnHeaderClickListener,
@@ -95,8 +95,24 @@ public class MainActivity extends AppCompatActivity
         mRecyclerView.addItemDecoration(decoration);
         mRecyclerView.addOnItemTouchListener(new StickyHeaderTouchListener(this, decoration, this));
         mRecyclerView.setVerticalScrollBarEnabled(mIsSortByTime);
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                if (newState != RecyclerView.SCROLL_STATE_IDLE){
+                    if (!mIsSortByTime){
+                        mSideBarView.hide();
+                    }
+                }
+            }
 
-        mSideBarView.setVisibility(mIsSortByTime ? View.GONE : View.VISIBLE);
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+
+            }
+        });
+
+
+//        mSideBarView.setVisibility(mIsSortByTime ? View.GONE : View.VISIBLE);
         mSideBarView.setOnTouchLetterChangeListener(this);
 
         onRefresh();
@@ -116,6 +132,7 @@ public class MainActivity extends AppCompatActivity
     public void showFileExplorer(final App app, boolean selectFile) {
         new FileExplorerDialog.Builder(this)
                 .selectFile(selectFile)
+                .title(selectFile ? "请选择apk文件" : "请选择保存路径")
                 .pathSelectListener(new OnPathSelectListener() {
                     @Override
                     public void onSelected(String path) {
@@ -181,7 +198,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRefresh() {
-        mPresenter.setApps(null);
+        mPresenter.clearApps();
         mToolbar.getMenu().getItem(1).setEnabled(false);
         mDisposables.add(mPresenter.getAndSort(this, mIsSortByTime));
     }
@@ -206,6 +223,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onLetterChange(String letter) {
+        if (mRecyclerView.getAdapter() == null){
+            return;
+        }
         ItemArray itemArray = ((AppAdapter) mRecyclerView.getAdapter()).getItems();
         int size = itemArray.size();
         for (int i = 0; i < size; i++) {
@@ -258,7 +278,12 @@ public class MainActivity extends AppCompatActivity
         mToolbar.getMenu().getItem(1).setEnabled(true);
         CommonPreference.putBoolean(this, Key.KEY_SORT, sortByTime);
         mRecyclerView.setVerticalScrollBarEnabled(sortByTime);
-        mSideBarView.setVisibility(sortByTime ? View.GONE : View.VISIBLE);
+        if (sortByTime) {
+            mSideBarView.setVisibility(View.GONE);
+        }else {
+            mSideBarView.setVisibility(View.VISIBLE);
+            mSideBarView.showAfterHide();
+        }
         if (mRecyclerView.getAdapter() == null) {
             mRecyclerView.setAdapter(new AppAdapter(apps, this));
         } else {
