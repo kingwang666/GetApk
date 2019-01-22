@@ -6,7 +6,7 @@ APP detail is a free tool app. This app has the following features:</p>
 4. Copy the signature information of apk to the clipboard.
 ## View installed app information ##
 All installed apps are displayed as a list. And you can sort by installation time or by name.</p>
-<img src="img\sort_time.png" width=200></img> <img src="img\sort_a.png" width=200></img></p>
+<img src="img\sort_time.png" width=18></img> <img src="img\sort_a.png" width=18></img>
 You can click on an app to view detail.</p>
 <img src="img\installed.png" width=200></img></p>
 Or long press to save to external storage.
