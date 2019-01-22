@@ -16,7 +16,7 @@ APP detail is a free tool app. This app has the following features:
 <p><img src="img\apk.png" width=200></img> <img src="img\import.png" width=200></img> <img src="img\uninstalled.png" width=200></img></p>  
 
 ## Export the apk file of the installed app ##
-<p>You can the apk file of the installed app to external storage by clicking the float button(red rectangle) or long press list on the homepage.</p>
+<p>You can export the apk file of the installed app to external storage by clicking the float button(red rectangle) or long press list on the homepage.</p>
 <p><img src="img\export.png" width=200></img> <img src="img\path.png" width=200></img></p>  
 
 ## Copy the signature information of apk to the clipboard ##
