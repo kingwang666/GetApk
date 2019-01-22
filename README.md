@@ -1,5 +1,5 @@
 # APP Detail #
-<p>[中文](https://github.com/kingwang666/GetApk/blob/master/README_CN.md)</p>
+[中文](https://github.com/kingwang666/GetApk/blob/master/README_CN.md)  
 APP detail is a free tool app. This app has the following features:  
 1. View installed app information.  
 2. View uninstalled apk information.  
