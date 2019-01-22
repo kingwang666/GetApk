@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity
     public void showFileExplorer(final App app, boolean selectFile) {
         new FileExplorerDialog.Builder(this)
                 .selectFile(selectFile)
-                .title(selectFile ? "请选择apk文件" : "请选择保存路径")
+                .title(selectFile ? R.string.choose_apk : R.string.choose_save_path)
                 .pathSelectListener(new OnPathSelectListener() {
                     @Override
                     public void onSelected(String path) {
@@ -141,8 +141,8 @@ public class MainActivity extends AppCompatActivity
                             mNumDialog = new NumberProgressDialog.Builder(MainActivity.this)
                                     .cancelable(false)
                                     .canceledOnTouchOutside(false)
-                                    .title("正在复制")
-                                    .negative("取消")
+                                    .title(R.string.copying)
+                                    .negative(R.string.cancel)
                                     .onNegative(new BaseDialog.OnButtonClickListener() {
                                         @Override
                                         public void onClick(@NonNull BaseDialog dialog, int which) {
@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity
                             mDisposables.add(mDisposable);
                         } else {
                             mDialog = new ProgressDialog.Builder(MainActivity.this)
-                                    .title("解析中")
+                                    .title(R.string.parsing)
                                     .show();
                             mDisposables.add(mPresenter.getApp(MainActivity.this, path));
                         }

@@ -15,4 +15,12 @@
     <string name="new_create">新建</string>
     <string name="new_create_folder">新建文件夹</string>
     <string name="cancel">取消</string>
+    <string name="choose_save_path">请选择保存路径</string>
+    <string name="copying">正在复制</string>
+    <string name="signature">签名%d:</string>
+    <string name="base_info">基础信息:</string>
+    <string name="signing_info">签名信息:</string>
+    <string name="history_signing">历史签名信息:</string>
+    <string name="choose_apk">请选择apk文件</string>
+    <string name="parsing">解析中</string>
 </resources>

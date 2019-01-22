@@ -260,7 +260,7 @@ public class LocalRepository {
                 .map(new Function<App, String>() {
                     @Override
                     public String apply(App source) throws Exception {
-                        String fileName = source.namePinyin + "_" + source.versionName + ".apk";
+                        String fileName = source.name + "_" + source.versionName + ".apk";
                         return FileUtil.copy(source.apkPath, dest, fileName, new OnCopyListener() {
                             @Override
                             public void inProgress(final float progress) {

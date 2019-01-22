@@ -212,7 +212,7 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
     })
     public void showFileExplorer(final App app) {
         new FileExplorerDialog.Builder(this)
-                .title("请选择保存路径")
+                .title(R.string.choose_save_path)
                 .pathSelectListener(new OnPathSelectListener() {
                     @Override
                     public void onSelected(String path) {
@@ -222,8 +222,8 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
                         mDialog = new NumberProgressDialog.Builder(DetailActivity.this)
                                 .cancelable(false)
                                 .canceledOnTouchOutside(false)
-                                .title("正在复制")
-                                .negative("取消")
+                                .title(R.string.copying)
+                                .negative(R.string.cancel)
                                 .onNegative(new BaseDialog.OnButtonClickListener() {
                                     @Override
                                     public void onClick(@NonNull BaseDialog dialog, int which) {
@@ -312,16 +312,16 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
     public void getSignatureSuccess(Sign sign) {
         if (sign.md5 != null) {
             for (int i = 0; i < sign.md5.length; i++) {
-                addParent2View("签名" + (i + 1) + ":");
+                addParent2View(getString(R.string.signature, i + 1));
                 addChildView("MD5: " + sign.md5[i]);
                 addChildView("SHA1: " + sign.sha1[i]);
                 addChildView("SHA256: " + sign.sha256[i]);
             }
         }
         if (sign.hasHistory) {
-            addParentView("历史签名信息：");
+            addParentView(getString(R.string.history_signing));
             for (int i = 0; i < sign.historyMD5.length; i++) {
-                addParent2View("签名" + (i + 1) + ":");
+                addParent2View(getString(R.string.signature, i + 1));
                 addChildView("MD5: " + sign.historyMD5[i]);
                 addChildView("SHA1: " + sign.historySHA1[i]);
                 addChildView("SHA256: " + sign.historySHA256[i]);

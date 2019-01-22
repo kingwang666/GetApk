@@ -14,6 +14,12 @@
     <string name="new_create">Create</string>
     <string name="new_create_folder">New folder</string>
     <string name="cancel">Cancel</string>
-
-
+    <string name="choose_save_path">Choose a save path</string>
+    <string name="copying">Copying</string>
+    <string name="signature">Signing %d:</string>
+    <string name="base_info">Basic information:</string>
+    <string name="signing_info">Signings:</string>
+    <string name="history_signing">Signing History:</string>
+    <string name="choose_apk">Select apk file</string>
+    <string name="parsing">Parsing</string>
 </resources>

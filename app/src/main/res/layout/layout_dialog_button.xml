@@ -8,10 +8,10 @@
     android:gravity="bottom"
     android:layoutDirection="locale"
     android:orientation="horizontal"
-    android:paddingBottom="4dp"
     android:paddingLeft="12dp"
+    android:paddingTop="4dp"
     android:paddingRight="12dp"
-    android:paddingTop="4dp">
+    android:paddingBottom="4dp">
 
     <Button
         android:id="@+id/neutral_btn"
@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         tools:text="@string/app_name" />
 
-    <androidx.core.widget.Space
+    <Space
         android:id="@+id/spacer"
         android:layout_width="0dp"
         android:layout_height="0dp"

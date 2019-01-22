@@ -24,11 +24,7 @@ public class FileExplorerDialogPresenter {
     private IView mView;
     private LocalRepository mRepository;
 
-    /**
-     * 文件导出为图片的 弹框dialog presenter
-     *
-     * @param view
-     */
+
     public FileExplorerDialogPresenter(IView view) {
         mFileItems = new ArrayList<>();
         mView = view;
