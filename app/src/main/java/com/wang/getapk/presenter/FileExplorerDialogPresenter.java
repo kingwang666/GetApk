@@ -18,7 +18,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * Author: wangxiaojie6
  * Date: 2018/1/11
  */
-
+@Deprecated
 public class FileExplorerDialogPresenter {
 
     private List<FileItem> mFileItems;

@@ -1,12 +1,14 @@
 package com.wang.getapk.repository;
 
 import android.annotation.SuppressLint;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.content.pm.SigningInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -112,10 +114,9 @@ public class LocalRepository {
                 .subscribeWith(subscriber);
     }
 
-    public Disposable getApp(Context context, final String path, KWSubscriber<App> subscriber) {
-        return Flowable.just(new WeakReference<>(context))
-                .map(weakContext -> {
-                    PackageManager pm = weakContext.get().getPackageManager();
+    public Disposable getApp(PackageManager packageManager, final String path, KWSubscriber<App> subscriber) {
+        return Flowable.just(packageManager)
+                .map(pm -> {
                     PackageInfo info = pm.getPackageArchiveInfo(path, 0);
                     if (info == null) {
                         throw new NullPointerException();
@@ -133,22 +134,22 @@ public class LocalRepository {
     }
 
     @SuppressLint("PackageManagerGetSignatures")
-    public Disposable getSignature(Context context, final String packageName, final boolean file, KWSubscriber<Sign> subscriber) {
-        return Flowable.just(new WeakReference<>(context))
-                .map(new Function<WeakReference<Context>, Sign>() {
+    public Disposable getSignature(PackageManager pm, final String packageName, final boolean file, KWSubscriber<Sign> subscriber) {
+        return Flowable.just(pm)
+                .map(new Function<PackageManager, Sign>() {
                     @Override
-                    public Sign apply(WeakReference<Context> weakContext) throws Exception {
+                    public Sign apply(PackageManager pm) throws Exception {
 
                         Sign sign = new Sign();
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                             PackageInfo info;
                             if (file) {
-                                info = weakContext.get().getPackageManager().getPackageArchiveInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES);
+                                info = pm.getPackageArchiveInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES);
                                 if (info.signingInfo == null) {
-                                    info = weakContext.get().getPackageManager().getPackageArchiveInfo(packageName, PackageManager.GET_SIGNATURES);
+                                    info = pm.getPackageArchiveInfo(packageName, PackageManager.GET_SIGNATURES);
                                 }
                             } else {
-                                info = weakContext.get().getPackageManager().getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES);
+                                info = pm.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES);
                             }
                             if (info == null) {
                                 throw new NullPointerException();
@@ -184,9 +185,9 @@ public class LocalRepository {
                         } else {
                             PackageInfo info;
                             if (file) {
-                                info = weakContext.get().getPackageManager().getPackageArchiveInfo(packageName, PackageManager.GET_SIGNATURES);
+                                info = pm.getPackageArchiveInfo(packageName, PackageManager.GET_SIGNATURES);
                             } else {
-                                info = weakContext.get().getPackageManager().getPackageInfo(packageName, PackageManager.GET_SIGNATURES);
+                                info = pm.getPackageInfo(packageName, PackageManager.GET_SIGNATURES);
                             }
                             Signature[] signatures = info.signatures;
                             if (signatures != null) {
@@ -256,6 +257,7 @@ public class LocalRepository {
                 .subscribeWith(subscriber);
     }
 
+    @Deprecated
     public Disposable saveApk(App app, final String dest, final KWSubscriber<String> subscriber) {
         return Flowable.just(app)
                 .map(new Function<App, String>() {
@@ -273,6 +275,30 @@ public class LocalRepository {
                                 });
                             }
                         }).getAbsolutePath();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(subscriber);
+    }
+
+    public Disposable saveApk(ContentResolver resolver, App app, final Uri dest, final KWSubscriber<Uri> subscriber) {
+        return Flowable.just(app)
+                .map(new Function<App, Uri>() {
+                    @Override
+                    public Uri apply(App source) throws Exception {
+                        FileUtil.copy(resolver, source.apkPath, dest, new OnCopyListener() {
+                            @Override
+                            public void inProgress(final float progress) {
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        subscriber.inProgress(progress);
+                                    }
+                                });
+                            }
+                        });
+                        return dest;
                     }
                 })
                 .subscribeOn(Schedulers.io())

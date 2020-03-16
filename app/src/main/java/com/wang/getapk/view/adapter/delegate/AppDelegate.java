@@ -114,13 +114,13 @@ public class AppDelegate extends AdapterDelegate<AppDelegate.AppViewHolder> {
                     listener.onDetail(mApp, mIconImg);
                 }
             });
-            itemView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    listener.onSave(mApp);
-                    return true;
-                }
-            });
+//            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+//                @Override
+//                public boolean onLongClick(View v) {
+//                    listener.onSave(mApp);
+//                    return true;
+//                }
+//            });
         }
 
         @OnClick(R.id.icon_img)

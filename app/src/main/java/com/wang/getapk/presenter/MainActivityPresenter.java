@@ -1,9 +1,11 @@
 package com.wang.getapk.presenter;
 
+import android.content.ContentProvider;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 
 import com.wang.baseadapter.model.ItemArray;
 import com.wang.getapk.model.App;
@@ -48,7 +50,7 @@ public class MainActivityPresenter {
     }
 
     public Disposable getApp(Context context, String path) {
-        return mRepository.getApp(context.getApplicationContext(), path, new KWSubscriber<App>() {
+        return mRepository.getApp(context.getPackageManager(), path, new KWSubscriber<App>() {
             @Override
             public void success(App app) {
                 mView.getAppSuccess(app);
@@ -62,6 +64,7 @@ public class MainActivityPresenter {
     }
 
 
+    @Deprecated
     public Disposable saveApk(App app, final String dest) {
         return mRepository.saveApk(app, dest, new KWSubscriber<String>() {
             @Override
@@ -80,6 +83,10 @@ public class MainActivityPresenter {
             }
         });
     }
+
+//    public Disposable saveApk(ContentProvider contentProvider, App app, Uri dest){
+//
+//    }
 
     public void clearApps() {
         mRepository.setApps(null);

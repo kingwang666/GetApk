@@ -257,6 +257,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    @Deprecated
     public void onSave(App app) {
         MainActivityPermissionsDispatcher.showFileExplorerWithPermissionCheck(this, app, false);
     }

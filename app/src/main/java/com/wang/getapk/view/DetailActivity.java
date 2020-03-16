@@ -3,6 +3,7 @@ package com.wang.getapk.view;
 import android.Manifest;
 import android.content.ComponentName;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -10,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.format.Formatter;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -30,6 +32,9 @@ import com.wang.getapk.view.dialog.NumberProgressDialog;
 import com.wang.getapk.view.listener.OnPathSelectListener;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
@@ -40,7 +45,9 @@ import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.core.os.EnvironmentCompat;
 import androidx.palette.graphics.Palette;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -189,6 +196,30 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 500 && resultCode == RESULT_OK && data != null) {
+            if (mDialog != null) {
+                dismissDialog();
+            }
+            mDialog = new NumberProgressDialog.Builder(DetailActivity.this)
+                    .cancelable(false)
+                    .canceledOnTouchOutside(false)
+                    .title(R.string.copying)
+                    .negative(R.string.cancel)
+                    .onNegative(new BaseDialog.OnButtonClickListener() {
+                        @Override
+                        public void onClick(@NonNull BaseDialog dialog, int which) {
+                            if (mSaveDisposable != null && !mSaveDisposable.isDisposed()) {
+                                mSaveDisposable.dispose();
+                            }
+                        }
+                    }).show();
+            mSaveDisposable = mPresenter.saveApk(this, mApp, data.getData());
+        }
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         DetailActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
@@ -196,7 +227,7 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
 
     @OnClick(R.id.fab)
     public void onFab() {
-        DetailActivityPermissionsDispatcher.showFileExplorerWithPermissionCheck(this, mApp);
+        createApk(mApp.name + "_" + mApp.versionName + ".apk");
     }
 
     @OnClick(R.id.logo_img)
@@ -210,6 +241,7 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
     })
+    @Deprecated
     public void showFileExplorer(final App app) {
         new FileExplorerDialog.Builder(this)
                 .title(R.string.choose_save_path)
@@ -236,6 +268,14 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
                     }
                 })
                 .show();
+    }
+
+    private void createApk(String fileName) {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/vnd.android.package-archive");
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+        startActivityForResult(intent, 500);
     }
 
     @OnShowRationale({
@@ -343,10 +383,10 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
 
     @Override
     public void saveSuccess(String path) {
-        MediaScannerConnection.scanFile(this,
-                new String[]{path},
-                new String[]{"application/vnd.android.package-archive"},
-                null);
+//        MediaScannerConnection.scanFile(this,
+//                new String[]{path},
+//                new String[]{"application/vnd.android.package-archive"},
+//                null);
         dismissDialog();
         Toast.makeText(this, "success: " + path, Toast.LENGTH_SHORT).show();
     }
