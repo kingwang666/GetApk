@@ -3,7 +3,8 @@ package com.wang.getapk.repository;
 
 import android.util.Log;
 
-import io.reactivex.subscribers.DisposableSubscriber;
+import io.reactivex.rxjava3.subscribers.DisposableSubscriber;
+
 
 /**
  * Author: wang

@@ -13,11 +13,7 @@ import com.wang.getapk.repository.LocalRepository;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
-import io.reactivex.Flowable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subscribers.DisposableSubscriber;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * Author: wangxiaojie6
