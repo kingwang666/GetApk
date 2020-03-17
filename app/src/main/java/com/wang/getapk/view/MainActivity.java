@@ -3,11 +3,23 @@ package com.wang.getapk.view;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.media.MediaScannerConnection;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityOptionsCompat;
+import androidx.core.util.Pair;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.wang.baseadapter.StickyHeaderDecoration;
 import com.wang.baseadapter.listener.OnHeaderClickListener;
@@ -21,25 +33,11 @@ import com.wang.getapk.model.App;
 import com.wang.getapk.presenter.MainActivityPresenter;
 import com.wang.getapk.util.CommonPreference;
 import com.wang.getapk.view.adapter.AppAdapter;
-import com.wang.getapk.view.dialog.BaseDialog;
-import com.wang.getapk.view.dialog.FileExplorerDialog;
-import com.wang.getapk.view.dialog.NumberProgressDialog;
 import com.wang.getapk.view.dialog.ProgressDialog;
-import com.wang.getapk.view.listener.OnPathSelectListener;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityOptionsCompat;
-import androidx.core.util.Pair;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.disposables.Disposable;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.OnPermissionDenied;
 import permissions.dispatcher.OnShowRationale;
@@ -56,6 +54,8 @@ public class MainActivity extends AppCompatActivity
         OnHeaderClickListener,
         MainActivityPresenter.IView {
 
+    private static final int REQUEST_READ_APK = 100;
+
     @BindView(R.id.recycler_view)
     RecyclerView mRecyclerView;
     @BindView(R.id.toolbar)
@@ -67,8 +67,7 @@ public class MainActivity extends AppCompatActivity
 
     private MainActivityPresenter mPresenter;
     private CompositeDisposable mDisposables;
-    private Disposable mDisposable;
-    private NumberProgressDialog mNumDialog;
+
     private ProgressDialog mDialog;
 
     private boolean mIsSortByTime = true;
@@ -125,49 +124,30 @@ public class MainActivity extends AppCompatActivity
         MainActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 
-    @NeedsPermission({
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-    })
-    public void showFileExplorer(final App app, boolean selectFile) {
-        new FileExplorerDialog.Builder(this)
-                .selectFile(selectFile)
-                .title(selectFile ? R.string.choose_apk : R.string.choose_save_path)
-                .pathSelectListener(new OnPathSelectListener() {
-                    @Override
-                    public void onSelected(String path) {
-                        dismissDialog();
-                        if (!selectFile) {
-                            mNumDialog = new NumberProgressDialog.Builder(MainActivity.this)
-                                    .cancelable(false)
-                                    .canceledOnTouchOutside(false)
-                                    .title(R.string.copying)
-                                    .negative(R.string.cancel)
-                                    .onNegative(new BaseDialog.OnButtonClickListener() {
-                                        @Override
-                                        public void onClick(@NonNull BaseDialog dialog, int which) {
-                                            if (mDisposable != null && !mDisposable.isDisposed()) {
-                                                mDisposable.dispose();
-                                            }
-                                        }
-                                    }).show();
-                            mDisposable = mPresenter.saveApk(app, path);
-                            mDisposables.add(mDisposable);
-                        } else {
-                            mDialog = new ProgressDialog.Builder(MainActivity.this)
-                                    .title(R.string.parsing)
-                                    .show();
-                            mDisposables.add(mPresenter.getApp(MainActivity.this, path));
-                        }
-                    }
-                })
-                .show();
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_READ_APK && resultCode == RESULT_OK && data != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                mDialog = new ProgressDialog.Builder(MainActivity.this)
+                        .title(R.string.parsing)
+                        .show();
+                mDisposables.add(mPresenter.getApp(MainActivity.this, data.getData()));
+            }else {
+                MainActivityPermissionsDispatcher.getAppWithPermissionCheck(this, data.getData());
+            }
+        }
     }
 
-    @OnShowRationale({
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-    })
+    @NeedsPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+    public void getApp(Uri uri) {
+        mDialog = new ProgressDialog.Builder(MainActivity.this)
+                .title(R.string.parsing)
+                .show();
+        mDisposables.add(mPresenter.getApp(MainActivity.this, uri));
+    }
+
+    @OnShowRationale(Manifest.permission.READ_EXTERNAL_STORAGE)
     public void showStorageRationale(final PermissionRequest request) {
         new AlertDialog.Builder(this)
                 .setMessage(R.string.rationale_storage)
@@ -188,13 +168,11 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    @OnPermissionDenied({
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-    })
+    @OnPermissionDenied(Manifest.permission.READ_EXTERNAL_STORAGE)
     public void storageDenied() {
         Toast.makeText(this, getString(R.string.error_storage), Toast.LENGTH_SHORT).show();
     }
+
 
     @Override
     public void onRefresh() {
@@ -207,7 +185,10 @@ public class MainActivity extends AppCompatActivity
     public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.apk:
-                MainActivityPermissionsDispatcher.showFileExplorerWithPermissionCheck(this, null, true);
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("application/vnd.android.package-archive");
+                startActivityForResult(intent, REQUEST_READ_APK);
                 break;
             case R.id.sort:
                 mIsSortByTime = !mIsSortByTime;
@@ -256,17 +237,8 @@ public class MainActivity extends AppCompatActivity
         ).toBundle());
     }
 
-    @Override
-    @Deprecated
-    public void onSave(App app) {
-        MainActivityPermissionsDispatcher.showFileExplorerWithPermissionCheck(this, app, false);
-    }
 
     private void dismissDialog() {
-        if (mNumDialog != null) {
-            mNumDialog.dismiss();
-            mNumDialog = null;
-        }
         if (mDialog != null) {
             mDialog.dismiss();
             mDialog = null;
@@ -311,29 +283,6 @@ public class MainActivity extends AppCompatActivity
     public void getAppError(String error) {
         dismissDialog();
         Toast.makeText(this, "error: " + error, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void inProgress(float progress) {
-        if (mNumDialog != null) {
-            mNumDialog.setProgress(Math.round(progress * 100));
-        }
-    }
-
-    @Override
-    public void saveSuccess(String path) {
-        MediaScannerConnection.scanFile(this,
-                new String[]{path},
-                new String[]{"application/vnd.android.package-archive"},
-                null);
-        dismissDialog();
-        Toast.makeText(this, "success: " + path, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void saveError(String message) {
-        dismissDialog();
-        Toast.makeText(this, "error: " + message, Toast.LENGTH_SHORT).show();
     }
 
     @Override

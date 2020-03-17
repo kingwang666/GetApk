@@ -4,6 +4,7 @@ import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -146,45 +147,44 @@ public class FileUtil {
         }
         long total = file.length();
         long sum = 0;
-        InputStream in = new FileInputStream(file);
-        try {
-            OutputStream out = new FileOutputStream(dst);
-            try {
-                // Transfer bytes from in to out
-                byte[] buf = new byte[1024 * 4];
-                int len;
-                Thread thread = Thread.currentThread();
-                while ((len = in.read(buf)) > 0) {
-                    if (thread.isInterrupted()) {
-                        break;
-                    }
-                    sum += len;
-                    out.write(buf, 0, len);
-                    if (listener != null) {
-                        listener.inProgress(sum * 1.0f / total);
-                    }
-
+        try (InputStream in = new FileInputStream(file); OutputStream out = new FileOutputStream(dst)) {
+            // Transfer bytes from in to out
+            byte[] buf = new byte[1024 * 4];
+            int len;
+            Thread thread = Thread.currentThread();
+            while ((len = in.read(buf)) > 0) {
+                if (thread.isInterrupted()) {
+                    break;
                 }
-            } finally {
-                out.close();
+                sum += len;
+                out.write(buf, 0, len);
+                if (listener != null) {
+                    listener.inProgress(sum * 1.0f / total);
+                }
+
             }
-        } finally {
-            in.close();
         }
         return dst;
     }
 
-    public static void copy(ContentResolver resolver, String source, Uri dest, OnCopyListener listener) throws IOException {
-        File file = new File(source);
-        if (!file.exists()) {
-            throw new IOException("the apk file is no exists");
-        }
+    public static void copy(ContentResolver resolver, Uri source, Uri dest, OnCopyListener listener) throws IOException {
 
-        long total = file.length();
-        long sum = 0;
-        try (InputStream in = new FileInputStream(file); OutputStream out = resolver.openOutputStream(dest)) {
+        FileInputStream in = null;
+        OutputStream out = null;
+        try{
+            AssetFileDescriptor fd = resolver.openAssetFileDescriptor(source, "r");
+            in =  fd != null ? fd.createInputStream() : null;
+
+            if (in == null){
+                throw new IOException("open the src file failed");
+            }
+            long total = fd.getLength();
+            long sum = 0;
+
+            out = resolver.openOutputStream(dest);
+
             if (out == null) {
-                throw new IOException("open the apk file failed");
+                throw new IOException("open the dest file failed");
             }
             // Transfer bytes from in to out
             byte[] buf = new byte[1024 * 4];
@@ -200,6 +200,9 @@ public class FileUtil {
                     listener.inProgress(sum * 1.0f / total);
                 }
             }
+        }finally {
+            IOUtil.closeQuiet(in);
+            IOUtil.closeQuiet(out);
         }
     }
 

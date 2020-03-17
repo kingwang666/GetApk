@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 
 import com.wang.baseadapter.model.ItemArray;
 import com.wang.getapk.model.App;
@@ -114,16 +115,26 @@ public class LocalRepository {
                 .subscribeWith(subscriber);
     }
 
-    public Disposable getApp(PackageManager packageManager, final String path, KWSubscriber<App> subscriber) {
-        return Flowable.just(packageManager)
-                .map(pm -> {
-                    PackageInfo info = pm.getPackageArchiveInfo(path, 0);
+    public Disposable getApp(Context context, final Uri path, KWSubscriber<App> subscriber) {
+        return Flowable.just(new WeakReference<>(context))
+                .map(weakContext -> {
+                    PackageManager pm = weakContext.get().getPackageManager();
+                    String realPath;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                        File file = new File(weakContext.get().getExternalCacheDir(), "temp.apk");
+                        file.deleteOnExit();
+                        realPath = file.getAbsolutePath();
+                        FileUtil.copy(weakContext.get().getContentResolver(), path, Uri.fromFile(new File(realPath)), null);
+                    }else {
+                        realPath = FileUtil.getPath(weakContext.get(), path);
+                    }
+                    PackageInfo info = pm.getPackageArchiveInfo(realPath, 0);
                     if (info == null) {
                         throw new NullPointerException();
                     }
                     ApplicationInfo applicationInfo = info.applicationInfo;
-                    applicationInfo.sourceDir = path;
-                    applicationInfo.publicSourceDir = path;
+                    applicationInfo.sourceDir = realPath;
+                    applicationInfo.publicSourceDir = realPath;
                     App app = new App(info, pm);
                     app.isFormFile = true;
                     return app;
@@ -287,7 +298,7 @@ public class LocalRepository {
                 .map(new Function<App, Uri>() {
                     @Override
                     public Uri apply(App source) throws Exception {
-                        FileUtil.copy(resolver, source.apkPath, dest, new OnCopyListener() {
+                        FileUtil.copy(resolver, Uri.fromFile(new File(source.apkPath)), dest, new OnCopyListener() {
                             @Override
                             public void inProgress(final float progress) {
                                 mHandler.post(new Runnable() {

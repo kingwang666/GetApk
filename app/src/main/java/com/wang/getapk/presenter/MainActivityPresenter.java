@@ -1,10 +1,6 @@
 package com.wang.getapk.presenter;
 
-import android.content.ContentProvider;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import com.wang.baseadapter.model.ItemArray;
@@ -49,8 +45,8 @@ public class MainActivityPresenter {
         });
     }
 
-    public Disposable getApp(Context context, String path) {
-        return mRepository.getApp(context.getPackageManager(), path, new KWSubscriber<App>() {
+    public Disposable getApp(Context context, Uri path) {
+        return mRepository.getApp(context, path, new KWSubscriber<App>() {
             @Override
             public void success(App app) {
                 mView.getAppSuccess(app);
@@ -62,31 +58,6 @@ public class MainActivityPresenter {
             }
         });
     }
-
-
-    @Deprecated
-    public Disposable saveApk(App app, final String dest) {
-        return mRepository.saveApk(app, dest, new KWSubscriber<String>() {
-            @Override
-            public void success(String path) {
-                mView.saveSuccess(path);
-            }
-
-            @Override
-            public void error(int code, String error) {
-                mView.saveError(error);
-            }
-
-            @Override
-            public void inProgress(float progress) {
-                mView.inProgress(progress);
-            }
-        });
-    }
-
-//    public Disposable saveApk(ContentProvider contentProvider, App app, Uri dest){
-//
-//    }
 
     public void clearApps() {
         mRepository.setApps(null);
@@ -102,12 +73,6 @@ public class MainActivityPresenter {
         void getAppSuccess(App app);
 
         void getAppError(String error);
-
-        void inProgress(float progress);
-
-        void saveSuccess(String path);
-
-        void saveError(String message);
 
     }
 }

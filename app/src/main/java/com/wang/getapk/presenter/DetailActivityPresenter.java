@@ -44,26 +44,6 @@ public class DetailActivityPresenter {
         });
     }
 
-    @Deprecated
-    public Disposable saveApk(App app, final String dest) {
-        return mRepository.saveApk(app, dest, new KWSubscriber<String>() {
-            @Override
-            public void success(String path) {
-                mView.saveSuccess(path);
-            }
-
-            @Override
-            public void error(int code, String error) {
-                mView.saveError(error);
-            }
-
-            @Override
-            public void inProgress(float progress) {
-                mView.inProgress(progress);
-            }
-        });
-    }
-
     public Disposable saveApk(Context context, App app, Uri dest) {
         ContentResolver resolver = context.getContentResolver();
         return mRepository.saveApk(resolver, app, dest, new KWSubscriber<Uri>() {

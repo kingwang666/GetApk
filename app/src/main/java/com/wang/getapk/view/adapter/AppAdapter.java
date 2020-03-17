@@ -28,8 +28,5 @@ public class AppAdapter extends BaseRecyclerViewAdapter {
 
         void onDetail(App app, View iconImg);
 
-        @Deprecated
-        void onSave(App app);
-
     }
 }

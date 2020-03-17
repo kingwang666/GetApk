@@ -1,21 +1,26 @@
 package com.wang.getapk.view;
 
-import android.Manifest;
 import android.content.ComponentName;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.media.MediaScannerConnection;
 import android.os.Bundle;
-import android.os.Environment;
 import android.text.format.Formatter;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatImageView;
+import androidx.appcompat.widget.AppCompatTextView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.palette.graphics.Palette;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
@@ -27,43 +32,23 @@ import com.wang.getapk.presenter.DetailActivityPresenter;
 import com.wang.getapk.util.DrawableHelper;
 import com.wang.getapk.util.SizeUtil;
 import com.wang.getapk.view.dialog.BaseDialog;
-import com.wang.getapk.view.dialog.FileExplorerDialog;
 import com.wang.getapk.view.dialog.NumberProgressDialog;
-import com.wang.getapk.view.listener.OnPathSelectListener;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Locale;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatImageView;
-import androidx.appcompat.widget.AppCompatTextView;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
-import androidx.core.os.EnvironmentCompat;
-import androidx.palette.graphics.Palette;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.reactivex.rxjava3.disposables.Disposable;
-import permissions.dispatcher.NeedsPermission;
-import permissions.dispatcher.OnPermissionDenied;
-import permissions.dispatcher.OnShowRationale;
-import permissions.dispatcher.PermissionRequest;
-import permissions.dispatcher.RuntimePermissions;
 
 /**
  * Author: wangxiaojie6
  * Date: 2018/12/29
  */
-@RuntimePermissions
 public class DetailActivity extends AppCompatActivity implements DetailActivityPresenter.IView {
+
+    private static final int REQUEST_COPY = 100;
 
     @BindView(R.id.logo_img)
     AppCompatImageView mLogoImg;
@@ -198,7 +183,7 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 500 && resultCode == RESULT_OK && data != null) {
+        if (requestCode == REQUEST_COPY && resultCode == RESULT_OK && data != null) {
             if (mDialog != null) {
                 dismissDialog();
             }
@@ -219,55 +204,18 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        DetailActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
-    }
-
     @OnClick(R.id.fab)
     public void onFab() {
-        createApk(mApp.name + "_" + mApp.versionName + ".apk");
+        if (!mApp.isFormFile){
+            createApk(mApp.name + "_" + mApp.versionName + ".apk");
+        }
     }
 
     @OnClick(R.id.logo_img)
     public void onLogo() {
-        if (mApp.launch != null) {
+        if (mApp.launch != null && !mApp.isFormFile) {
             startActivity(mApp.launch);
         }
-    }
-
-    @NeedsPermission({
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-    })
-    @Deprecated
-    public void showFileExplorer(final App app) {
-        new FileExplorerDialog.Builder(this)
-                .title(R.string.choose_save_path)
-                .pathSelectListener(new OnPathSelectListener() {
-                    @Override
-                    public void onSelected(String path) {
-                        if (mDialog != null) {
-                            dismissDialog();
-                        }
-                        mDialog = new NumberProgressDialog.Builder(DetailActivity.this)
-                                .cancelable(false)
-                                .canceledOnTouchOutside(false)
-                                .title(R.string.copying)
-                                .negative(R.string.cancel)
-                                .onNegative(new BaseDialog.OnButtonClickListener() {
-                                    @Override
-                                    public void onClick(@NonNull BaseDialog dialog, int which) {
-                                        if (mSaveDisposable != null && !mSaveDisposable.isDisposed()) {
-                                            mSaveDisposable.dispose();
-                                        }
-                                    }
-                                }).show();
-                        mSaveDisposable = mPresenter.saveApk(app, path);
-                    }
-                })
-                .show();
     }
 
     private void createApk(String fileName) {
@@ -275,39 +223,7 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("application/vnd.android.package-archive");
         intent.putExtra(Intent.EXTRA_TITLE, fileName);
-        startActivityForResult(intent, 500);
-    }
-
-    @OnShowRationale({
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-    })
-    public void showStorageRationale(final PermissionRequest request) {
-        new AlertDialog.Builder(this)
-                .setMessage(R.string.rationale_storage)
-                .setTitle(R.string.warning)
-                .setPositiveButton(R.string.allow, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        request.proceed();
-                    }
-                })
-                .setNegativeButton(R.string.deny, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        request.cancel();
-                    }
-                })
-                .show();
-
-    }
-
-    @OnPermissionDenied({
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-    })
-    public void storageDenied() {
-        Toast.makeText(this, getString(R.string.error_storage), Toast.LENGTH_SHORT).show();
+        startActivityForResult(intent, REQUEST_COPY);
     }
 
     private void addChildView(String str) {
@@ -383,10 +299,6 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityP
 
     @Override
     public void saveSuccess(String path) {
-//        MediaScannerConnection.scanFile(this,
-//                new String[]{path},
-//                new String[]{"application/vnd.android.package-archive"},
-//                null);
         dismissDialog();
         Toast.makeText(this, "success: " + path, Toast.LENGTH_SHORT).show();
     }
