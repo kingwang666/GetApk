@@ -13,11 +13,11 @@ APP信息是一个免费的工具应用. T它有以下功能特点:
 
 ## 查看未安装的apk信息 ##
 <p>你可以通过点击红色矩形标识的菜单按钮来导入一个apk文件分析.</p>
-<p><img src="img\apk.png" width=200></img> <img src="img\import.png" width=200></img> <img src="img\uninstalled.png" width=200></img></p>  
+<p><img src="img\apk.png" width=200></img> <img src="img\uninstalled.png" width=200></img></p>  
 
 ## 导出已安装的app应用的apk文件 ##
-<p>你可以通过点击红色矩形标识的悬浮按钮或者在主页长按列表项把一个已安装的应用的apk文件导出到外部存储</p>
-<p><img src="img\export.png" width=200></img> <img src="img\path.png" width=200></img></p>  
+<p>你可以通过点击红色矩形标识的悬浮按钮把一个已安装的应用的apk文件导出到外部存储</p>
+<p><img src="img\export.png" width=200></img> </p>  
 
 ## 复制apk的签名信息到剪切板 ##
 <p>双击文本信息来进行复制</p>
