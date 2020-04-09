@@ -46,7 +46,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * Author: wangxiaojie6
  * Date: 2018/12/29
  */
-public class DetailActivity extends AppCompatActivity implements DetailActivityPresenter.IView {
+public class DetailActivity extends BaseActivity implements DetailActivityPresenter.IView {
 
     private static final int REQUEST_COPY = 100;
 

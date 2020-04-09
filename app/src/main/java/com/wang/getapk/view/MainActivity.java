@@ -45,7 +45,7 @@ import permissions.dispatcher.PermissionRequest;
 import permissions.dispatcher.RuntimePermissions;
 
 @RuntimePermissions
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends BaseActivity
         implements AppAdapter.OnAppClickListener,
         Toolbar.OnMenuItemClickListener,
 
