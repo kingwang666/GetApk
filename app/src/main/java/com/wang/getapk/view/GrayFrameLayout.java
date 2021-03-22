@@ -41,7 +41,7 @@ public class GrayFrameLayout extends FrameLayout {
             mIsSaved = false;
             canvas.restore();
         } else {
-            super.draw(canvas);
+            super.dispatchDraw(canvas);
         }
     }
 

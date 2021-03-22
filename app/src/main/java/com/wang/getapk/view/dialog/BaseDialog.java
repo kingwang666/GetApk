@@ -7,6 +7,10 @@ import android.view.View;
 import android.widget.Button;
 
 import com.wang.getapk.R;
+import com.wang.getapk.util.AutoGrayThemeHelper;
+import com.wang.getapk.util.DateChangedHelper;
+import com.wang.getapk.util.GrayThemeHelper;
+import com.wang.getapk.util.IGrayChecker;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
@@ -55,6 +59,9 @@ public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatD
     private CompositeDisposable mCompositeDisposable;
     Builder mBuilder;
 
+    @Nullable
+    protected AutoGrayThemeHelper mGrayThemeHelper;
+
     BaseDialog(Builder builder) {
         super(builder.context);
         mBuilder = builder;
@@ -73,6 +80,21 @@ public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatD
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(getLayoutId());
+        mGrayThemeHelper = createGrayThemeHelper(getWindow().getDecorView(), getContext());
+    }
+
+    @Nullable
+    protected AutoGrayThemeHelper createGrayThemeHelper(View view, Context context){
+        return new AutoGrayThemeHelper(view, context, AutoGrayThemeHelper.QINGMING_CHECKER);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (mGrayThemeHelper != null){
+            mGrayThemeHelper.bindDateChangedReceiver();
+            mGrayThemeHelper.applyOrRemoveGrayTheme();
+        }
     }
 
     @Override
@@ -148,11 +170,15 @@ public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatD
         }
     }
 
+    protected final void applyOrRemoveGrayTheme() {
+        if (mGrayThemeHelper != null) {
+            mGrayThemeHelper.applyOrRemoveGrayTheme();
+        }
+    }
+
     public Builder getBuilder() {
         return mBuilder;
     }
-
-
 
     /**
      * 插入到观察者集合
@@ -197,6 +223,14 @@ public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatD
             mCompositeDisposable = null;
         }
         mUnbinder.unbind();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mGrayThemeHelper != null){
+            mGrayThemeHelper.unbindDateChangedReceiver();
+        }
     }
 
     public interface OnButtonClickListener {
