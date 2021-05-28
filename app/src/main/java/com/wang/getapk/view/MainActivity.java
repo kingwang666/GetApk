@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -48,7 +49,6 @@ import permissions.dispatcher.RuntimePermissions;
 public class MainActivity extends BaseActivity
         implements AppAdapter.OnAppClickListener,
         Toolbar.OnMenuItemClickListener,
-
         SwipeRefreshLayout.OnRefreshListener,
         WaveSideBarView.OnTouchLetterChangeListener,
         OnHeaderClickListener,
@@ -235,6 +235,15 @@ public class MainActivity extends BaseActivity
         startActivity(intent, ActivityOptionsCompat.makeSceneTransitionAnimation(this,
                 Pair.create(iconImg, "logo_img")
         ).toBundle());
+    }
+
+    @Override
+    public void onSettings(App app) {
+        if (!app.isFormFile) {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.fromParts("package", app.packageName, null));
+            startActivity(intent);
+        }
     }
 
 

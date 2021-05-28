@@ -7,7 +7,9 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.format.Formatter;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -40,6 +42,7 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnLongClick;
 import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
@@ -164,17 +167,23 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
                     mToolbarLayout.setBackgroundColor(color);
                     mToolbarLayout.setContentScrimColor(color);
                     mToolbarLayout.setStatusBarScrimColor(color);
-                    int titleColor = swatch.getBodyTextColor();
+                    int titleColor = swatch.getTitleTextColor();
                     mToolbar.setTitleTextColor(titleColor);
                     mToolbar.setNavigationIcon(DrawableHelper.tintDrawable(this, R.drawable.ic_arrow_back_white_24dp, ColorStateList.valueOf(titleColor), null));
                     mToolbarLayout.setExpandedTitleColor(titleColor);
                     mToolbarLayout.setCollapsedTitleTextColor(titleColor);
                     mToolbar.getMenu().getItem(0).setIcon(DrawableHelper.tintDrawable(this, R.drawable.ic_export, ColorStateList.valueOf(titleColor), null));
                 }
-                swatch = palette.getDarkVibrantSwatch();
+                swatch = palette.getLightVibrantSwatch();
+                if (swatch == null) {
+                    swatch = palette.getVibrantSwatch();
+                }
+                if (swatch == null) {
+                    swatch = palette.getDarkVibrantSwatch();
+                }
                 if (swatch != null) {
                     mFab.setSupportBackgroundTintList(ColorStateList.valueOf(swatch.getRgb()));
-                    mFab.setSupportImageTintList(ColorStateList.valueOf(swatch.getBodyTextColor()));
+                    mFab.setSupportImageTintList(ColorStateList.valueOf(swatch.getTitleTextColor()));
                 }
             }
         });
@@ -206,7 +215,7 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
 
     @OnClick(R.id.fab)
     public void onFab() {
-        if (!mApp.isFormFile){
+        if (!mApp.isFormFile) {
             createApk(mApp.name + "_" + mApp.versionName + ".apk");
         }
     }
@@ -215,6 +224,15 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
     public void onLogo() {
         if (mApp.launch != null && !mApp.isFormFile) {
             startActivity(mApp.launch);
+        }
+    }
+
+    @OnLongClick(R.id.logo_img)
+    public void onSetting() {
+        if (!mApp.isFormFile) {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.fromParts("package", mApp.packageName, null));
+            startActivity(intent);
         }
     }
 

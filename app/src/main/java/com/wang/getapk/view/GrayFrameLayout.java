@@ -18,9 +18,10 @@ import androidx.annotation.Nullable;
  * Author: bigwang
  * Description:
  */
+@Deprecated
 public class GrayFrameLayout extends FrameLayout {
 
-    private Paint mPaint = new Paint();
+    private final Paint mPaint = new Paint();
 
     private boolean mIsSaved = false;
 
@@ -43,11 +44,6 @@ public class GrayFrameLayout extends FrameLayout {
         } else {
             super.dispatchDraw(canvas);
         }
-    }
-
-    @Override
-    protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
-        return super.drawChild(canvas, child, drawingTime);
     }
 
     @Override

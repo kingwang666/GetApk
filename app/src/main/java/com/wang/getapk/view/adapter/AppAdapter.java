@@ -28,5 +28,7 @@ public class AppAdapter extends BaseRecyclerViewAdapter {
 
         void onDetail(App app, View iconImg);
 
+        void onSettings(App app);
+
     }
 }
