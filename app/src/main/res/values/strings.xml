@@ -22,4 +22,16 @@
     <string name="history_signing">Signing History:</string>
     <string name="choose_apk">Select apk file</string>
     <string name="parsing">Parsing</string>
+    <string name="package_name">Package Name:</string>
+    <string name="launch">Launch:</string>
+    <string name="compile_sdk">Compile Sdk:</string>
+    <string name="target_sdk">Target Sdk:</string>
+    <string name="min_sdk">Min Sdk:</string>
+    <string name="version_code">Version Code:</string>
+    <string name="version_name">Version Name:</string>
+    <string name="time">Time:</string>
+    <string name="detail_release">Release:</string>
+    <string name="detail_system">System:</string>
+    <string name="detail_path">APK Path:</string>
+    <string name="detail_size">APK Size:</string>
 </resources>

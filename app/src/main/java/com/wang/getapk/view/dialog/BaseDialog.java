@@ -8,9 +8,6 @@ import android.widget.Button;
 
 import com.wang.getapk.R;
 import com.wang.getapk.util.AutoGrayThemeHelper;
-import com.wang.getapk.util.DateChangedHelper;
-import com.wang.getapk.util.GrayThemeHelper;
-import com.wang.getapk.util.IGrayChecker;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
@@ -18,11 +15,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDialog;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.AppCompatTextView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.Optional;
-import butterknife.Unbinder;
+import androidx.viewbinding.ViewBinding;
+
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 
@@ -31,7 +25,8 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * Date: 2017/12/28
  */
 
-public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatDialog {
+public abstract class BaseDialog<Builder extends BaseBuilder<?>, VB extends ViewBinding> extends
+        AppCompatDialog {
 
     public static final int POSITIVE = 1;
     public static final int NEUTRAL = 2;
@@ -42,22 +37,18 @@ public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatD
     }
 
     @Nullable
-    @BindView(R.id.title_tv)
-    AppCompatTextView mTitleTV;
+    private AppCompatTextView mTitleTV;
     @Nullable
-    @BindView(R.id.neutral_btn)
-    AppCompatButton mNeutralBtn;
+    private AppCompatButton mNeutralBtn;
     @Nullable
-    @BindView(R.id.negative_btn)
-    AppCompatButton mNegativeBtn;
+    private AppCompatButton mNegativeBtn;
     @Nullable
-    @BindView(R.id.positive_btn)
-    AppCompatButton mPositiveBtn;
+    private AppCompatButton mPositiveBtn;
 
-
-    private Unbinder mUnbinder;
     private CompositeDisposable mCompositeDisposable;
     Builder mBuilder;
+
+    VB viewBinding;
 
     @Nullable
     protected AutoGrayThemeHelper mGrayThemeHelper;
@@ -79,31 +70,57 @@ public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatD
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(getLayoutId());
+        viewBinding = getViewBinding();
+        setContentView(viewBinding.getRoot());
         mGrayThemeHelper = createGrayThemeHelper(getWindow().getDecorView(), getContext());
+        initCommonView();
+        initViewListener();
+        afterView(mBuilder.context, mBuilder);
+    }
+
+    private void initViews(View view) {
+        mTitleTV = view.findViewById(R.id.title_tv);
+        mNeutralBtn = view.findViewById(R.id.neutral_btn);
+        mNegativeBtn = view.findViewById(R.id.negative_btn);
+        mPositiveBtn = view.findViewById(R.id.positive_btn);
+        if (mNeutralBtn != null) {
+            mNeutralBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onNeutral();
+                }
+            });
+        }
+        if (mNegativeBtn != null) {
+            mNegativeBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onNegative();
+                }
+            });
+        }
+        if (mPositiveBtn != null) {
+            mPositiveBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onPositive();
+                }
+            });
+        }
     }
 
     @Nullable
-    protected AutoGrayThemeHelper createGrayThemeHelper(View view, Context context){
+    protected AutoGrayThemeHelper createGrayThemeHelper(View view, Context context) {
         return new AutoGrayThemeHelper(view, context, AutoGrayThemeHelper.QINGMING_CHECKER);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (mGrayThemeHelper != null){
+        if (mGrayThemeHelper != null) {
             mGrayThemeHelper.bindDateChangedReceiver();
             mGrayThemeHelper.applyOrRemoveGrayTheme();
         }
-    }
-
-    @Override
-    public void show() {
-        super.show();
-        mUnbinder = ButterKnife.bind(this);
-        initCommonView();
-        initViewListener();
-        afterView(mBuilder.context, mBuilder);
     }
 
     private void initCommonView() {
@@ -129,7 +146,7 @@ public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatD
         }
     }
 
-    protected abstract int getLayoutId();
+    protected abstract VB getViewBinding();
 
     protected void initViewListener() {
 
@@ -137,8 +154,7 @@ public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatD
 
     protected abstract void afterView(Context context, Builder builder);
 
-    @Optional
-    @OnClick(R.id.neutral_btn)
+
     public void onNeutral() {
         if (mBuilder.autoDismiss) {
             dismiss();
@@ -148,8 +164,7 @@ public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatD
         }
     }
 
-    @Optional
-    @OnClick(R.id.negative_btn)
+
     public void onNegative() {
         if (mBuilder.autoDismiss) {
             dismiss();
@@ -159,8 +174,7 @@ public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatD
         }
     }
 
-    @Optional
-    @OnClick(R.id.positive_btn)
+
     public void onPositive() {
         if (mBuilder.autoDismiss) {
             dismiss();
@@ -222,20 +236,19 @@ public abstract class BaseDialog<Builder extends BaseBuilder> extends AppCompatD
             mCompositeDisposable.clear();
             mCompositeDisposable = null;
         }
-        mUnbinder.unbind();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (mGrayThemeHelper != null){
+        if (mGrayThemeHelper != null) {
             mGrayThemeHelper.unbindDateChangedReceiver();
         }
     }
 
     public interface OnButtonClickListener {
 
-        void onClick(@NonNull BaseDialog dialog, @DialogAction int which);
+        void onClick(@NonNull BaseDialog<?, ?> dialog, @DialogAction int which);
 
     }
 }

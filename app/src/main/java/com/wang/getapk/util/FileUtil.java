@@ -209,9 +209,8 @@ public class FileUtil {
     @NonNull
     public static String getPath(@NonNull final Context context, @NonNull final Uri uri) {
 
-        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
         // DocumentProvider
-        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+        if (DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
@@ -264,27 +263,6 @@ public class FileUtil {
         else if ("file".equalsIgnoreCase(uri.getScheme())) {
             String path = uri.getPath();
             return path == null ? "" : path;
-        } else if (!isKitKat) {
-            String filename = "";
-            if (uri.getScheme().compareTo("content") == 0) {
-                Cursor cursor = context.getContentResolver().query(uri, new String[]{MediaStore.Audio.Media.DATA}, null, null, null);
-                if (cursor != null) {
-                    if (cursor.moveToFirst()) {
-                        filename = cursor.getString(0);
-                    }
-                    cursor.close();
-                }
-            } else {
-                if (uri.getScheme().compareTo("file") == 0) {         //file:///开头的uri{
-                    filename = uri.toString().replace("file://", "");
-                    //替换file://
-                    if (!filename.startsWith("/mnt")) {
-                        //加上"/mnt"头
-                        filename += "/mnt";
-                    }
-                }
-            }
-            return filename;
         }
 
         return "";

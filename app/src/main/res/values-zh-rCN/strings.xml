@@ -23,4 +23,16 @@
     <string name="history_signing">历史签名信息:</string>
     <string name="choose_apk">请选择apk文件</string>
     <string name="parsing">解析中</string>
+    <string name="package_name">Package Name:</string>
+    <string name="launch">Launch:</string>
+    <string name="compile_sdk">Compile Sdk:</string>
+    <string name="target_sdk">Target Sdk:</string>
+    <string name="min_sdk">Min Sdk:</string>
+    <string name="version_code">Version Code:</string>
+    <string name="version_name">Version Name:</string>
+    <string name="time">Time:</string>
+    <string name="detail_release">Release:</string>
+    <string name="detail_system">System:</string>
+    <string name="detail_path">APK Path:</string>
+    <string name="detail_size">APK Size:</string>
 </resources>

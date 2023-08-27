@@ -1,6 +1,7 @@
 package com.wang.getapk.view;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -11,6 +12,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -30,14 +34,13 @@ import com.wang.baseadapter.model.ItemData;
 import com.wang.baseadapter.widget.WaveSideBarView;
 import com.wang.getapk.R;
 import com.wang.getapk.constant.Key;
+import com.wang.getapk.databinding.ActivityMainBinding;
 import com.wang.getapk.model.App;
 import com.wang.getapk.presenter.MainActivityPresenter;
 import com.wang.getapk.util.CommonPreference;
 import com.wang.getapk.view.adapter.AppAdapter;
 import com.wang.getapk.view.dialog.ProgressDialog;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.OnPermissionDenied;
@@ -46,24 +49,13 @@ import permissions.dispatcher.PermissionRequest;
 import permissions.dispatcher.RuntimePermissions;
 
 @RuntimePermissions
-public class MainActivity extends BaseActivity
+public class MainActivity extends BaseActivity<ActivityMainBinding>
         implements AppAdapter.OnAppClickListener,
         Toolbar.OnMenuItemClickListener,
         SwipeRefreshLayout.OnRefreshListener,
         WaveSideBarView.OnTouchLetterChangeListener,
         OnHeaderClickListener,
         MainActivityPresenter.IView {
-
-    private static final int REQUEST_READ_APK = 100;
-
-    @BindView(R.id.recycler_view)
-    RecyclerView mRecyclerView;
-    @BindView(R.id.toolbar)
-    Toolbar mToolbar;
-    @BindView(R.id.refresh_view)
-    SwipeRefreshLayout mRefreshView;
-    @BindView(R.id.side_bar_view)
-    WaveSideBarView mSideBarView;
 
     private MainActivityPresenter mPresenter;
     private CompositeDisposable mDisposables;
@@ -72,34 +64,47 @@ public class MainActivity extends BaseActivity
 
     private boolean mIsSortByTime = true;
 
+    private final ActivityResultLauncher<String> mGetApkLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
+        @Override
+        public void onActivityResult(Uri result) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                mDialog = new ProgressDialog.Builder(MainActivity.this)
+                        .title(R.string.parsing)
+                        .show();
+                mDisposables.add(mPresenter.getApp(MainActivity.this, result));
+            } else {
+                MainActivityPermissionsDispatcher.getAppWithPermissionCheck(MainActivity.this, result);
+            }
+        }
+    });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
+        setContentView(ActivityMainBinding.inflate(getLayoutInflater()));
         mIsSortByTime = CommonPreference.getBoolean(this, Key.KEY_SORT, mIsSortByTime);
         mPresenter = new MainActivityPresenter(this);
         mDisposables = new CompositeDisposable();
 
-        mToolbar.inflateMenu(R.menu.menu_main);
-        mToolbar.getMenu().getItem(1).setIcon(mIsSortByTime ? R.drawable.ic_a_white_24dp : R.drawable.ic_timer_white_24dp);
-        mToolbar.setOnMenuItemClickListener(this);
-//        mToolbar.setNavigationOnClickListener(v -> onBackPressed());
-        mRefreshView.setOnRefreshListener(this);
-        mRefreshView.setColorSchemeResources(R.color.blue300, R.color.red300, R.color.green300);
-        mRefreshView.setRefreshing(true);
+        viewBinding.toolbar.inflateMenu(R.menu.menu_main);
+        viewBinding.toolbar.getMenu().getItem(1).setIcon(mIsSortByTime ? R.drawable.ic_a_white_24dp : R.drawable.ic_timer_white_24dp);
+        viewBinding.toolbar.setOnMenuItemClickListener(this);
+//        viewBinding.toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        viewBinding.refreshView.setOnRefreshListener(this);
+        viewBinding.refreshView.setColorSchemeResources(R.color.blue300, R.color.red300, R.color.green300);
+        viewBinding.refreshView.setRefreshing(true);
 
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        viewBinding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
         StickyHeaderDecoration decoration = new StickyHeaderDecoration(AppAdapter.TYPE_STICKY);
-        mRecyclerView.addItemDecoration(decoration);
-        mRecyclerView.addOnItemTouchListener(new StickyHeaderTouchListener(this, decoration, this));
-        mRecyclerView.setVerticalScrollBarEnabled(mIsSortByTime);
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        viewBinding.recyclerView.addItemDecoration(decoration);
+        viewBinding.recyclerView.addOnItemTouchListener(new StickyHeaderTouchListener(this, decoration, this));
+        viewBinding.recyclerView.setVerticalScrollBarEnabled(mIsSortByTime);
+        viewBinding.recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                if (newState != RecyclerView.SCROLL_STATE_IDLE){
-                    if (!mIsSortByTime){
-                        mSideBarView.hide();
+                if (newState != RecyclerView.SCROLL_STATE_IDLE) {
+                    if (!mIsSortByTime) {
+                        viewBinding.sideBarView.hide();
                     }
                 }
             }
@@ -111,8 +116,8 @@ public class MainActivity extends BaseActivity
         });
 
 
-//        mSideBarView.setVisibility(mIsSortByTime ? View.GONE : View.VISIBLE);
-        mSideBarView.setOnTouchLetterChangeListener(this);
+//        viewBinding.sideBarView.setVisibility(mIsSortByTime ? View.GONE : View.VISIBLE);
+        viewBinding.sideBarView.setOnTouchLetterChangeListener(this);
 
         onRefresh();
 
@@ -124,22 +129,7 @@ public class MainActivity extends BaseActivity
         MainActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_READ_APK && resultCode == RESULT_OK && data != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                mDialog = new ProgressDialog.Builder(MainActivity.this)
-                        .title(R.string.parsing)
-                        .show();
-                mDisposables.add(mPresenter.getApp(MainActivity.this, data.getData()));
-            }else {
-                MainActivityPermissionsDispatcher.getAppWithPermissionCheck(this, data.getData());
-            }
-        }
-    }
-
-    @NeedsPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+    @NeedsPermission(value = Manifest.permission.READ_EXTERNAL_STORAGE, maxSdkVersion = Build.VERSION_CODES.S_V2)
     public void getApp(Uri uri) {
         mDialog = new ProgressDialog.Builder(MainActivity.this)
                 .title(R.string.parsing)
@@ -147,6 +137,7 @@ public class MainActivity extends BaseActivity
         mDisposables.add(mPresenter.getApp(MainActivity.this, uri));
     }
 
+    @SuppressLint("NoCorrespondingNeedsPermission")
     @OnShowRationale(Manifest.permission.READ_EXTERNAL_STORAGE)
     public void showStorageRationale(final PermissionRequest request) {
         new AlertDialog.Builder(this)
@@ -177,7 +168,7 @@ public class MainActivity extends BaseActivity
     @Override
     public void onRefresh() {
         mPresenter.clearApps();
-        mToolbar.getMenu().getItem(1).setEnabled(false);
+        viewBinding.toolbar.getMenu().getItem(1).setEnabled(false);
         mDisposables.add(mPresenter.getAndSort(this, mIsSortByTime));
     }
 
@@ -185,16 +176,13 @@ public class MainActivity extends BaseActivity
     public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.apk:
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("application/vnd.android.package-archive");
-                startActivityForResult(intent, REQUEST_READ_APK);
+                mGetApkLauncher.launch("application/vnd.android.package-archive");
                 break;
             case R.id.sort:
                 mIsSortByTime = !mIsSortByTime;
                 item.setIcon(mIsSortByTime ? R.drawable.ic_a_white_24dp : R.drawable.ic_timer_white_24dp);
-                mRefreshView.setRefreshing(true);
-                mToolbar.getMenu().getItem(1).setEnabled(false);
+                viewBinding.refreshView.setRefreshing(true);
+                viewBinding.toolbar.getMenu().getItem(1).setEnabled(false);
                 mDisposables.add(mPresenter.getAndSort(this, mIsSortByTime));
                 break;
         }
@@ -204,10 +192,10 @@ public class MainActivity extends BaseActivity
 
     @Override
     public void onLetterChange(String letter) {
-        if (mRecyclerView.getAdapter() == null){
+        if (viewBinding.recyclerView.getAdapter() == null) {
             return;
         }
-        ItemArray itemArray = ((AppAdapter) mRecyclerView.getAdapter()).getItems();
+        ItemArray itemArray = ((AppAdapter) viewBinding.recyclerView.getAdapter()).getItems();
         int size = itemArray.size();
         for (int i = 0; i < size; i++) {
             ItemData data = itemArray.get(i);
@@ -215,7 +203,7 @@ public class MainActivity extends BaseActivity
                 App app = data.getData();
                 if (app.namePinyin.startsWith(letter)) {
                     LinearLayoutManager mLayoutManager =
-                            (LinearLayoutManager) mRecyclerView.getLayoutManager();
+                            (LinearLayoutManager) viewBinding.recyclerView.getLayoutManager();
                     mLayoutManager.scrollToPositionWithOffset(i, 0);
                     return;
                 }
@@ -232,9 +220,7 @@ public class MainActivity extends BaseActivity
     public void onDetail(App app, View iconImg) {
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra("app", app);
-        startActivity(intent, ActivityOptionsCompat.makeSceneTransitionAnimation(this,
-                Pair.create(iconImg, "logo_img")
-        ).toBundle());
+        startActivity(intent, ActivityOptionsCompat.makeSceneTransitionAnimation(this, iconImg, "logo_img").toBundle());
     }
 
     @Override
@@ -256,27 +242,27 @@ public class MainActivity extends BaseActivity
 
     @Override
     public void getAppsSuccess(ItemArray apps, boolean sortByTime) {
-        mRefreshView.setRefreshing(false);
-        mToolbar.getMenu().getItem(1).setEnabled(true);
+        viewBinding.refreshView.setRefreshing(false);
+        viewBinding.toolbar.getMenu().getItem(1).setEnabled(true);
         CommonPreference.putBoolean(this, Key.KEY_SORT, sortByTime);
-        mRecyclerView.setVerticalScrollBarEnabled(sortByTime);
+        viewBinding.recyclerView.setVerticalScrollBarEnabled(sortByTime);
         if (sortByTime) {
-            mSideBarView.setVisibility(View.GONE);
-        }else {
-            mSideBarView.setVisibility(View.VISIBLE);
-            mSideBarView.showAfterHide();
-        }
-        if (mRecyclerView.getAdapter() == null) {
-            mRecyclerView.setAdapter(new AppAdapter(apps, this));
+            viewBinding.sideBarView.setVisibility(View.GONE);
         } else {
-            ((AppAdapter) mRecyclerView.getAdapter()).setItems(apps);
+            viewBinding.sideBarView.setVisibility(View.VISIBLE);
+            viewBinding.sideBarView.showAfterHide();
+        }
+        if (viewBinding.recyclerView.getAdapter() == null) {
+            viewBinding.recyclerView.setAdapter(new AppAdapter(apps, this));
+        } else {
+            ((AppAdapter) viewBinding.recyclerView.getAdapter()).setItems(apps);
         }
     }
 
     @Override
     public void getAppsError(String message) {
-        mRefreshView.setRefreshing(false);
-        mToolbar.getMenu().getItem(1).setEnabled(true);
+        viewBinding.refreshView.setRefreshing(false);
+        viewBinding.toolbar.getMenu().getItem(1).setEnabled(true);
         Toast.makeText(this, "error: " + message, Toast.LENGTH_SHORT).show();
     }
 

@@ -54,7 +54,7 @@ public class LocalRepository {
 
     private List<App> mApps;
 
-    private Handler mHandler;
+    private final Handler mHandler;
     private final ReadWriteLock mLock = new ReentrantReadWriteLock();
 
     public static LocalRepository getInstance() {
@@ -128,7 +128,12 @@ public class LocalRepository {
                     }else {
                         realPath = FileUtil.getPath(weakContext.get(), path);
                     }
-                    PackageInfo info = pm.getPackageArchiveInfo(realPath, 0);
+                    PackageInfo info;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                        info = pm.getPackageArchiveInfo(realPath, PackageManager.PackageInfoFlags.of(0));
+                    }else {
+                        info = pm.getPackageArchiveInfo(realPath, 0);
+                    }
                     if (info == null) {
                         throw new NullPointerException();
                     }
@@ -168,9 +173,9 @@ public class LocalRepository {
                             SigningInfo signingInfo = info.signingInfo;
                             Signature[] signatures = signingInfo == null ? info.signatures : signingInfo.getApkContentsSigners();
                             if (signatures != null) {
-                                sign.md5 = new String[signatures.length];
-                                sign.sha1 = new String[signatures.length];
-                                sign.sha256 = new String[signatures.length];
+                                sign.md5 = new String[signatures.length][2];
+                                sign.sha1 = new String[signatures.length][2];
+                                sign.sha256 = new String[signatures.length][2];
                                 for (int i = 0; i < signatures.length; i++) {
                                     byte[] data = signatures[i].toByteArray();
                                     sign.md5[i] = SignUtil.getMD5(data);
@@ -182,9 +187,9 @@ public class LocalRepository {
                                 sign.hasHistory = true;
                                 signatures = signingInfo.getSigningCertificateHistory();
                                 if (signatures != null) {
-                                    sign.historyMD5 = new String[signatures.length];
-                                    sign.historySHA1 = new String[signatures.length];
-                                    sign.historySHA256 = new String[signatures.length];
+                                    sign.historyMD5 = new String[signatures.length][2];
+                                    sign.historySHA1 = new String[signatures.length][2];
+                                    sign.historySHA256 = new String[signatures.length][2];
                                     for (int i = 0; i < signatures.length; i++) {
                                         byte[] data = signatures[i].toByteArray();
                                         sign.historyMD5[i] = SignUtil.getMD5(data);
@@ -202,9 +207,9 @@ public class LocalRepository {
                             }
                             Signature[] signatures = info.signatures;
                             if (signatures != null) {
-                                sign.md5 = new String[signatures.length];
-                                sign.sha1 = new String[signatures.length];
-                                sign.sha256 = new String[signatures.length];
+                                sign.md5 = new String[signatures.length][2];
+                                sign.sha1 = new String[signatures.length][2];
+                                sign.sha256 = new String[signatures.length][2];
                                 for (int i = 0; i < signatures.length; i++) {
                                     byte[] data = signatures[i].toByteArray();
                                     sign.md5[i] = SignUtil.getMD5(data);

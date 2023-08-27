@@ -4,17 +4,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.wang.getapk.R;
+import com.wang.getapk.databinding.ItemFileBinding;
 import com.wang.getapk.model.FileItem;
 import com.wang.getapk.view.listener.OnRecyclerClickListener;
 
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.widget.AppCompatTextView;
-import androidx.recyclerview.widget.RecyclerView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 /**
  * Author: wangxiaojie6
@@ -24,30 +22,30 @@ import butterknife.ButterKnife;
 public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileViewHolder> {
 
     @NonNull
-    private List<FileItem> mFileItems;
+    private final List<FileItem> mFileItems;
     @NonNull
-    private OnRecyclerClickListener mListener;
+    private final OnRecyclerClickListener mListener;
 
     public FileAdapter(@NonNull List<FileItem> fileItems, @NonNull OnRecyclerClickListener listener) {
         mFileItems = fileItems;
         mListener = listener;
     }
 
+    @NonNull
     @Override
-    public FileViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_file, parent, false);
-        return new FileViewHolder(itemView);
+    public FileViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return new FileViewHolder(ItemFileBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
     }
 
     @Override
-    public void onBindViewHolder(FileViewHolder vh, int position) {
+    public void onBindViewHolder(@NonNull FileViewHolder vh, int position) {
         FileItem item = mFileItems.get(position);
         if (item.isDirectory) {
-            vh.mNameTV.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_folder_blue_24dp, 0, 0, 0);
+            vh.viewBinding.nameTv.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_folder_blue_24dp, 0, 0, 0);
         } else {
-            vh.mNameTV.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_android_green_24dp, 0, 0, 0);
+            vh.viewBinding.nameTv.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_android_green_24dp, 0, 0, 0);
         }
-        vh.mNameTV.setText(item.name);
+        vh.viewBinding.nameTv.setText(item.name);
     }
 
     @Override
@@ -55,14 +53,10 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileViewHolder
         return mFileItems.size();
     }
 
-    class FileViewHolder extends RecyclerView.ViewHolder {
+    class FileViewHolder extends BaseViewHolder<ItemFileBinding> {
 
-        @BindView(R.id.name_tv)
-        AppCompatTextView mNameTV;
-
-        public FileViewHolder(View itemView) {
-            super(itemView);
-            ButterKnife.bind(this, itemView);
+        public FileViewHolder(@NonNull ItemFileBinding viewBinding) {
+            super(viewBinding);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

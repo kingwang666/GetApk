@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -23,6 +24,12 @@ public class App implements Parcelable {
     public ApplicationInfo applicationInfo;
 
     public String packageName;
+
+    public int compileSdkVersion;
+
+    public int minSdkVersion;
+
+    public int targetSdkVersion;
 
     public String apkPath;
 
@@ -52,6 +59,13 @@ public class App implements Parcelable {
         lastUpdateTime = info.lastUpdateTime;
         packageName = info.packageName;
         apkPath = applicationInfo.sourceDir;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            compileSdkVersion = applicationInfo.compileSdkVersion;
+        }
+        targetSdkVersion = applicationInfo.targetSdkVersion;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            minSdkVersion = applicationInfo.minSdkVersion;
+        }
         versionName = info.versionName;
         versionCode = info.versionCode;
         launch = pm.getLaunchIntentForPackage(packageName);
@@ -63,11 +77,15 @@ public class App implements Parcelable {
 
     }
 
+
     protected App(Parcel in) {
         name = in.readString();
         namePinyin = in.readString();
         applicationInfo = in.readParcelable(ApplicationInfo.class.getClassLoader());
         packageName = in.readString();
+        compileSdkVersion = in.readInt();
+        minSdkVersion = in.readInt();
+        targetSdkVersion = in.readInt();
         apkPath = in.readString();
         versionName = in.readString();
         versionCode = in.readInt();
@@ -77,6 +95,31 @@ public class App implements Parcelable {
         lastUpdateTime = in.readLong();
         time = in.readString();
         launch = in.readParcelable(Intent.class.getClassLoader());
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(namePinyin);
+        dest.writeParcelable(applicationInfo, flags);
+        dest.writeString(packageName);
+        dest.writeInt(compileSdkVersion);
+        dest.writeInt(minSdkVersion);
+        dest.writeInt(targetSdkVersion);
+        dest.writeString(apkPath);
+        dest.writeString(versionName);
+        dest.writeInt(versionCode);
+        dest.writeByte((byte) (isSystem ? 1 : 0));
+        dest.writeByte((byte) (isDebug ? 1 : 0));
+        dest.writeByte((byte) (isFormFile ? 1 : 0));
+        dest.writeLong(lastUpdateTime);
+        dest.writeString(time);
+        dest.writeParcelable(launch, flags);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     public static final Creator<App> CREATOR = new Creator<App>() {
@@ -90,26 +133,4 @@ public class App implements Parcelable {
             return new App[size];
         }
     };
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(name);
-        dest.writeString(namePinyin);
-        dest.writeParcelable(applicationInfo, flags);
-        dest.writeString(packageName);
-        dest.writeString(apkPath);
-        dest.writeString(versionName);
-        dest.writeInt(versionCode);
-        dest.writeByte((byte) (isSystem ? 1 : 0));
-        dest.writeByte((byte) (isDebug ? 1 : 0));
-        dest.writeByte((byte) (isFormFile ? 1 : 0));
-        dest.writeLong(lastUpdateTime);
-        dest.writeString(time);
-        dest.writeParcelable(launch, flags);
-    }
 }

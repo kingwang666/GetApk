@@ -6,14 +6,14 @@ package com.wang.getapk.model;
  */
 public class Sign {
 
-    public String[] md5;
-    public String[] sha1;
-    public String[] sha256;
+    public String[][] md5;
+    public String[][] sha1;
+    public String[][] sha256;
 
     public boolean hasHistory = false;
 
-    public String[] historyMD5;
-    public String[] historySHA1;
-    public String[] historySHA256;
+    public String[][] historyMD5;
+    public String[][] historySHA1;
+    public String[][] historySHA256;
 
 }

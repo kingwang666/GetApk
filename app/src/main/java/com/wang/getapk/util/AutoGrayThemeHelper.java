@@ -26,7 +26,7 @@ public class AutoGrayThemeHelper extends GrayThemeHelper implements DateChangedH
         @Override
         public boolean shouldGrayTheme() {
             Calendar calendar = Calendar.getInstance();
-            return calendar.get(Calendar.MONTH) == Calendar.APRIL && calendar.get(Calendar.DAY_OF_MONTH) == 4;
+            return calendar.get(Calendar.MONTH) == Calendar.APRIL && calendar.get(Calendar.DAY_OF_MONTH) == 5;
         }
     };
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <attr name="infoItemViewStyle" format="reference"/>
+
+    <declare-styleable name="InfoItemView">
+        <attr name="titleTextAppearance" />
+        <attr name="textAppearance" format="reference" />
+        <attr name="title" />
+        <attr name="android:text" />
+        <attr name="android:textIsSelectable"/>
+        <attr name="titleMargin" />
+        <attr name="titleTextColor" />
+        <attr name="android:textColor" />
+    </declare-styleable>
+
+</resources>

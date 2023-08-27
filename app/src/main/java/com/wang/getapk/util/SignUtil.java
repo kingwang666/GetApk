@@ -1,5 +1,8 @@
 package com.wang.getapk.util;
 
+import android.util.Base64;
+import android.util.Log;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -16,42 +19,52 @@ public class SignUtil {
         return new String(res);
     }
 
-    public static String getMD5(byte[] data) {
-        String value = "";
+    private static String bytes2Base64(byte[] src){
+        return Base64.encodeToString(src, Base64.DEFAULT);
+    }
+
+    public static String[] getMD5(byte[] data) {
+        String[] value = new String[2];
         if (data == null || data.length == 0) {
             return value;
         }
         try {
             MessageDigest digester = MessageDigest.getInstance("MD5");
-            value = bytes2Hex(digester.digest(data));
+            byte[] src = digester.digest(data);
+            value[0] = bytes2Hex(src);
+            value[1] = bytes2Base64(src);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         return value;
     }
 
-    public static String getSHA1(byte[] data) {
-        String value = "";
+    public static String[] getSHA1(byte[] data) {
+        String[] value = new String[2];
         if (data == null || data.length == 0) {
             return value;
         }
         try {
             MessageDigest digester = MessageDigest.getInstance("SHA1");
-            value = bytes2Hex(digester.digest(data));
+            byte[] src = digester.digest(data);
+            value[0] = bytes2Hex(src);
+            value[1] = bytes2Base64(src);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         return value;
     }
 
-    public static String getSHA256(byte[] data) {
-        String value = "";
+    public static String[] getSHA256(byte[] data) {
+        String[] value = new String[2];
         if (data == null || data.length == 0) {
             return value;
         }
         try {
             MessageDigest digester = MessageDigest.getInstance("SHA256");
-            value = bytes2Hex(digester.digest(data));
+            byte[] src = digester.digest(data);
+            value[0] = bytes2Hex(src);
+            value[1] = bytes2Base64(src);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }

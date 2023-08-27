@@ -22,8 +22,8 @@ import io.reactivex.rxjava3.disposables.Disposable;
  */
 public class DetailActivityPresenter {
 
-    private IView mView;
-    private LocalRepository mRepository;
+    private final IView mView;
+    private final LocalRepository mRepository;
 
     public DetailActivityPresenter(IView view) {
         mView = view;

@@ -8,22 +8,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+
 import com.wang.baseadapter.delegate.AdapterDelegate;
 import com.wang.baseadapter.model.ItemArray;
 import com.wang.getapk.R;
+import com.wang.getapk.databinding.ItemAppBinding;
 import com.wang.getapk.model.App;
 import com.wang.getapk.view.adapter.AppAdapter;
+import com.wang.getapk.view.adapter.BaseViewHolder;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
 
-import androidx.appcompat.widget.AppCompatImageView;
-import androidx.appcompat.widget.AppCompatTextView;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.RecyclerView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.disposables.Disposable;
@@ -38,7 +36,7 @@ import io.reactivex.rxjava3.subscribers.DisposableSubscriber;
 
 public class AppDelegate extends AdapterDelegate<AppDelegate.AppViewHolder> {
 
-    private AppAdapter.OnAppClickListener mListener;
+    private final AppAdapter.OnAppClickListener mListener;
 
     public AppDelegate(AppAdapter.OnAppClickListener listener) {
         mListener = listener;
@@ -46,8 +44,7 @@ public class AppDelegate extends AdapterDelegate<AppDelegate.AppViewHolder> {
 
     @Override
     public AppViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_app, parent, false);
-        return new AppViewHolder(itemView, mListener);
+        return new AppViewHolder(ItemAppBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false), mListener);
     }
 
     @Override
@@ -56,26 +53,26 @@ public class AppDelegate extends AdapterDelegate<AppDelegate.AppViewHolder> {
         Context context = vh.itemView.getContext().getApplicationContext();
         vh.mApp = app;
         vh.getIcon();
-        vh.mNameTV.setText(app.name);
+        vh.viewBinding.nameTv.setText(app.name);
         int colorDagger = ContextCompat.getColor(context, R.color.red500);
         int colorNor = ContextCompat.getColor(context, R.color.blue500);
         if (app.isSystem) {
-            vh.mSystemTV.setTextColor(colorDagger);
-            vh.mSystemTV.setText(R.string.system);
+            vh.viewBinding.systemTv.setTextColor(colorDagger);
+            vh.viewBinding.systemTv.setText(R.string.system);
         } else {
-            vh.mSystemTV.setTextColor(colorNor);
-            vh.mSystemTV.setText(R.string.third_party);
+            vh.viewBinding.systemTv.setTextColor(colorNor);
+            vh.viewBinding.systemTv.setText(R.string.third_party);
         }
         if (app.isDebug) {
-            vh.mDebugTV.setTextColor(colorNor);
-            vh.mDebugTV.setText(R.string.debug);
+            vh.viewBinding.debugTv.setTextColor(colorNor);
+            vh.viewBinding.debugTv.setText(R.string.debug);
         } else {
-            vh.mDebugTV.setTextColor(colorDagger);
-            vh.mDebugTV.setText(R.string.release);
+            vh.viewBinding.debugTv.setTextColor(colorDagger);
+            vh.viewBinding.debugTv.setText(R.string.release);
         }
-        vh.mSizeTV.setText(Formatter.formatFileSize(context, new File(app.apkPath).length()));
-        vh.mVersionNameTV.setText(app.versionName);
-        vh.mTimeTV.setText(app.time);
+        vh.viewBinding.sizeTv.setText(Formatter.formatFileSize(context, new File(app.apkPath).length()));
+        vh.viewBinding.versionNameTv.setText(app.versionName);
+        vh.viewBinding.timeTv.setText(app.time);
     }
 
     @Override
@@ -84,34 +81,19 @@ public class AppDelegate extends AdapterDelegate<AppDelegate.AppViewHolder> {
     }
 
 
-    static class AppViewHolder extends RecyclerView.ViewHolder {
-
-        @BindView(R.id.icon_img)
-        AppCompatImageView mIconImg;
-        @BindView(R.id.name_tv)
-        AppCompatTextView mNameTV;
-        @BindView(R.id.system_tv)
-        AppCompatTextView mSystemTV;
-        @BindView(R.id.debug_tv)
-        AppCompatTextView mDebugTV;
-        @BindView(R.id.size_tv)
-        AppCompatTextView mSizeTV;
-        @BindView(R.id.version_name_tv)
-        AppCompatTextView mVersionNameTV;
-        @BindView(R.id.time_tv)
-        AppCompatTextView mTimeTV;
+    static class AppViewHolder extends BaseViewHolder<ItemAppBinding> {
 
         App mApp;
 
         Disposable mDisposable;
 
-        public AppViewHolder(View itemView, final AppAdapter.OnAppClickListener listener) {
-            super(itemView);
-            ButterKnife.bind(this, itemView);
+        public AppViewHolder(@NonNull ItemAppBinding viewBinding, final AppAdapter.OnAppClickListener listener) {
+            super(viewBinding);
+         
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    listener.onDetail(mApp, mIconImg);
+                    listener.onDetail(mApp, viewBinding.iconImg);
                 }
             });
             itemView.setOnLongClickListener(new View.OnLongClickListener() {
@@ -121,15 +103,16 @@ public class AppDelegate extends AdapterDelegate<AppDelegate.AppViewHolder> {
                     return true;
                 }
             });
+            viewBinding.iconImg.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mApp.launch != null) {
+                        itemView.getContext().startActivity(mApp.launch);
+                    }
+                }
+            });
         }
-
-        @OnClick(R.id.icon_img)
-        public void onClick(){
-            if (mApp.launch != null) {
-                itemView.getContext().startActivity(mApp.launch);
-            }
-        }
-
+        
         public void getIcon() {
             recycler();
             final WeakReference<App> appWeak = new WeakReference<>(mApp);
@@ -150,7 +133,7 @@ public class AppDelegate extends AdapterDelegate<AppDelegate.AppViewHolder> {
                     .subscribeWith(new DisposableSubscriber<Drawable>() {
                         @Override
                         public void onNext(Drawable drawable) {
-                            mIconImg.setImageDrawable(drawable);
+                            viewBinding.iconImg.setImageDrawable(drawable);
                         }
 
                         @Override

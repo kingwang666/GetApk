@@ -9,6 +9,7 @@ import android.view.MenuItem;
 import com.wang.getapk.R;
 import com.wang.getapk.constant.Key;
 import com.wang.getapk.constant.Path;
+import com.wang.getapk.databinding.DialogFileExplorerBinding;
 import com.wang.getapk.model.FileItem;
 import com.wang.getapk.presenter.FileExplorerDialogPresenter;
 import com.wang.getapk.util.CommonPreference;
@@ -30,7 +31,8 @@ import androidx.appcompat.widget.AppCompatTextView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import butterknife.BindView;
+import androidx.viewbinding.ViewBinding;
+
 import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
@@ -38,18 +40,10 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * Date: 2018/1/11
  */
 @Deprecated
-public class FileExplorerDialog extends BaseDialog<FileExplorerDialog.Builder>
+public class FileExplorerDialog extends BaseDialog<FileExplorerDialog.Builder, DialogFileExplorerBinding>
         implements FileExplorerDialogPresenter.IView,
         OnRecyclerClickListener,
         Toolbar.OnMenuItemClickListener {
-
-    @BindView(R.id.toolbar)
-    Toolbar mToolbar;
-    @BindView(R.id.path_tv)
-    AppCompatTextView mPathTV;
-    @BindView(R.id.recycler_view)
-    RecyclerView mRecyclerView;
-
     private FileExplorerDialogPresenter mPresenter;
     private Disposable mDisposable;
 
@@ -59,20 +53,20 @@ public class FileExplorerDialog extends BaseDialog<FileExplorerDialog.Builder>
     }
 
     @Override
-    protected int getLayoutId() {
-        return R.layout.dialog_file_explorer;
+    protected DialogFileExplorerBinding getViewBinding() {
+        return DialogFileExplorerBinding.inflate(getLayoutInflater());
     }
 
     @Override
     protected void afterView(Context context, Builder builder) {
         if (!builder.isSelectFile) {
-            mToolbar.inflateMenu(R.menu.menu_dialog_file_explorer);
-            mToolbar.setOnMenuItemClickListener(this);
+            viewBinding.toolbar.inflateMenu(R.menu.menu_dialog_file_explorer);
+            viewBinding.toolbar.setOnMenuItemClickListener(this);
         }
-        mToolbar.setTitle(builder.title);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(context));
-        mRecyclerView.setAdapter(new FileAdapter(mPresenter.getFileItems(), this));
-        mRecyclerView.setHasFixedSize(true);
+        viewBinding.toolbar.setTitle(builder.title);
+        viewBinding.recyclerView.setLayoutManager(new LinearLayoutManager(context));
+        viewBinding.recyclerView.setAdapter(new FileAdapter(mPresenter.getFileItems(), this));
+        viewBinding.recyclerView.setHasFixedSize(true);
         String lastPath;
         if (builder.isSelectFile) {
             lastPath = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -104,7 +98,7 @@ public class FileExplorerDialog extends BaseDialog<FileExplorerDialog.Builder>
         int id = item.getItemId();
         switch (id) {
             case R.id.confirm:
-                mBuilder.pathSelectListener.onSelected((String) mPathTV.getText());
+                mBuilder.pathSelectListener.onSelected((String) viewBinding.pathTv.getText());
                 dismiss();
                 break;
             case R.id.create:
@@ -121,7 +115,7 @@ public class FileExplorerDialog extends BaseDialog<FileExplorerDialog.Builder>
                                     name = getContext().getString(R.string.new_create_folder);
                                 }
                                 try {
-                                    String path = mPathTV.getText().toString();
+                                    String path = viewBinding.pathTv.getText().toString();
                                     FileUtil.newCreateFolder(path, name);
                                     if (mDisposable != null && !mDisposable.isDisposed()) {
                                         mDisposable.dispose();
@@ -144,12 +138,12 @@ public class FileExplorerDialog extends BaseDialog<FileExplorerDialog.Builder>
 
     @Override
     public void getFilesSuccess(File parent) {
-        mRecyclerView.getAdapter().notifyDataSetChanged();
+        viewBinding.recyclerView.getAdapter().notifyDataSetChanged();
         String path = parent.getAbsolutePath();
         if (!mBuilder.isSelectFile) {
             CommonPreference.putString(getContext(), Key.KEY_LAST_DIR, path);
         }
-        mPathTV.setText(path);
+        viewBinding.pathTv.setText(path);
     }
 
     @Override

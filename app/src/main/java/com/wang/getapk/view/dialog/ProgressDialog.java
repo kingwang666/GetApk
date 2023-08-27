@@ -3,6 +3,7 @@ package com.wang.getapk.view.dialog;
 import android.content.Context;
 
 import com.wang.getapk.R;
+import com.wang.getapk.databinding.DialogProgressBinding;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
@@ -12,15 +13,15 @@ import androidx.annotation.UiThread;
  * Date: 2018/1/26
  */
 
-public class ProgressDialog extends BaseDialog<ProgressDialog.Builder> {
+public class ProgressDialog extends BaseDialog<ProgressDialog.Builder, DialogProgressBinding> {
 
     private ProgressDialog(Builder builder) {
         super(builder);
     }
 
     @Override
-    protected int getLayoutId() {
-        return R.layout.dialog_progress;
+    protected DialogProgressBinding getViewBinding() {
+        return DialogProgressBinding.inflate(getLayoutInflater());
     }
 
     @Override

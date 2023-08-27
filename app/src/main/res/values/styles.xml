@@ -8,6 +8,7 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="infoItemViewStyle">@style/Widget.Wang.InfoItemView</item>
         <!--<item name="toolbarNavigationButtonStyle">@style/Widget.AppCompat.Toolbar.Button.Navigation.Wang</item>-->
     </style>
 
@@ -19,4 +20,17 @@
         <item name="android:textSize">12sp</item>
     </style>
 
+    <style name="Widget.Wang.InfoItemView" parent="">
+        <item name="titleTextAppearance">@style/TextAppearance.Wang.Title</item>
+        <item name="textAppearance">@style/TextAppearance.Wang.Text</item>
+        <item name="titleMargin">6dp</item>
+    </style>
+
+    <style name="TextAppearance.Wang.Title" parent="TextAppearance.AppCompat">
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TextAppearance.Wang.Text" parent="TextAppearance.AppCompat.Small"/>
 </resources>

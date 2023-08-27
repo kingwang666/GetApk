@@ -10,79 +10,47 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.text.format.Formatter;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.AppCompatTextView;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.widget.ImageViewCompat;
 import androidx.palette.graphics.Palette;
 
-import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.appbar.CollapsingToolbarLayout;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.wang.getapk.R;
+import com.wang.getapk.databinding.ActivityDetailBinding;
 import com.wang.getapk.model.App;
 import com.wang.getapk.model.Sign;
 import com.wang.getapk.presenter.DetailActivityPresenter;
+import com.wang.getapk.util.AndroidVersionHelper;
 import com.wang.getapk.util.DrawableHelper;
 import com.wang.getapk.util.SizeUtil;
 import com.wang.getapk.view.dialog.BaseDialog;
 import com.wang.getapk.view.dialog.NumberProgressDialog;
+import com.wang.getapk.view.widget.InfoItemView;
 
 import java.io.File;
 import java.util.Locale;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.OnLongClick;
 import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * Author: wangxiaojie6
  * Date: 2018/12/29
  */
-public class DetailActivity extends BaseActivity implements DetailActivityPresenter.IView {
-
-    private static final int REQUEST_COPY = 100;
-
-    @BindView(R.id.logo_img)
-    AppCompatImageView mLogoImg;
-    @BindView(R.id.toolbar)
-    Toolbar mToolbar;
-    @BindView(R.id.toolbar_layout)
-    CollapsingToolbarLayout mToolbarLayout;
-    @BindView(R.id.app_bar)
-    AppBarLayout mAppBar;
-    @BindView(R.id.package_tv)
-    AppCompatTextView mPackageTV;
-    @BindView(R.id.launch_tv)
-    AppCompatTextView mLaunchTV;
-    @BindView(R.id.version_tv)
-    AppCompatTextView mVersionTV;
-    @BindView(R.id.version_name_tv)
-    AppCompatTextView mVersionNameTV;
-    @BindView(R.id.time_tv)
-    AppCompatTextView mTimeTV;
-    @BindView(R.id.release_tv)
-    AppCompatTextView mReleaseTV;
-    @BindView(R.id.system_tv)
-    AppCompatTextView mSystemTV;
-    @BindView(R.id.path_tv)
-    AppCompatTextView mPathTV;
-    @BindView(R.id.size_tv)
-    AppCompatTextView mSizeTV;
-    @BindView(R.id.info_parent)
-    LinearLayout mInfoParent;
-    @BindView(R.id.fab)
-    FloatingActionButton mFab;
+public class DetailActivity extends BaseActivity<ActivityDetailBinding> implements
+        DetailActivityPresenter.IView {
 
     private App mApp;
     private DetailActivityPresenter mPresenter;
@@ -91,11 +59,38 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
     private NumberProgressDialog mDialog;
     private boolean mCollapsed;
 
+    private final ActivityResultLauncher<String> mCreateApkLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/vnd.android.package-archive"), new ActivityResultCallback<Uri>() {
+        @Override
+        public void onActivityResult(Uri result) {
+            if (result == null) {
+                return;
+            }
+            if (mDialog != null) {
+                dismissDialog();
+            }
+            mDialog = new NumberProgressDialog.Builder(DetailActivity.this)
+                    .cancelable(false)
+                    .canceledOnTouchOutside(false)
+                    .title(R.string.copying)
+                    .negative(R.string.cancel)
+                    .onNegative(new BaseDialog.OnButtonClickListener() {
+                        @Override
+                        public void onClick(@NonNull BaseDialog<?, ?> dialog, int which) {
+                            if (mSaveDisposable != null && !mSaveDisposable.isDisposed()) {
+                                mSaveDisposable.dispose();
+                            }
+                        }
+                    }).show();
+            mSaveDisposable = mPresenter.saveApk(DetailActivity.this, mApp, result);
+        }
+    });
+
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_detail);
-        ButterKnife.bind(this);
+        setContentView(ActivityDetailBinding.inflate(getLayoutInflater()));
+        initView();
 
         mApp = getIntent().getParcelableExtra("app");
 
@@ -103,9 +98,9 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
         mDisposable = mPresenter.getSignature(this, mApp.isFormFile ? mApp.apkPath : mApp.packageName, mApp.isFormFile);
 
         final Drawable drawable = mApp.applicationInfo.loadIcon(getPackageManager());
-        mLogoImg.setImageDrawable(drawable);
-        mToolbar.setTitle(mApp.name);
-        mToolbar.inflateMenu(R.menu.menu_detail);
+        viewBinding.logoImg.setImageDrawable(drawable);
+        viewBinding.toolbar.setTitle(mApp.name);
+        viewBinding.toolbar.inflateMenu(R.menu.menu_detail);
         if (drawable instanceof BitmapDrawable) {
             setColors(((BitmapDrawable) drawable).getBitmap(), false);
         } else {
@@ -118,41 +113,78 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
             canvas.setBitmap(null);
             setColors(bitmap, true);
         }
-        mToolbar.setOnMenuItemClickListener(item -> {
-            onFab();
+        viewBinding.toolbar.setOnMenuItemClickListener(item -> {
+            if (!mApp.isFormFile) {
+                createApk(mApp.name + "_" + mApp.versionName + ".apk");
+            }
             return true;
         });
-        mAppBar.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
+        viewBinding.appBar.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
             if (-verticalOffset >= appBarLayout.getTotalScrollRange()) {
                 if (!mCollapsed) {
-                    mToolbar.getMenu().getItem(0).setVisible(true);
+                    viewBinding.toolbar.getMenu().getItem(0).setVisible(true);
                     mCollapsed = true;
                 }
 
             } else {
                 if (mCollapsed) {
-                    mToolbar.getMenu().getItem(0).setVisible(false);
+                    viewBinding.toolbar.getMenu().getItem(0).setVisible(false);
                     mCollapsed = false;
                 }
             }
 
         });
-        mToolbar.setNavigationOnClickListener(v -> onBackPressed());
-        mPackageTV.setText(String.format("Package Name: %s", mApp.packageName));
+        viewBinding.toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        viewBinding.packageItemView.setText(mApp.packageName);
         ComponentName name = null;
         if (mApp.launch != null) {
             name = mApp.launch.getComponent();
         }
-        mLaunchTV.setText(String.format("Launch: %s", name == null ? "null" : name.getClassName()));
-        mVersionTV.setText(String.format(Locale.getDefault(), "Version Code: %d", mApp.versionCode));
-        mVersionNameTV.setText(String.format("Version Name: %s", mApp.versionName));
-        mTimeTV.setText(String.format("Time: %s", mApp.time));
+        viewBinding.launchItemView.setText(name == null ? "null" : name.getClassName());
+        viewBinding.compileSdkItemView.setText(String.format(Locale.getDefault(), "%d (%s)", mApp.compileSdkVersion, AndroidVersionHelper.getName(mApp.compileSdkVersion)));
+        viewBinding.targetSdkItemView.setText(String.format(Locale.getDefault(), "%d (%s)", mApp.targetSdkVersion, AndroidVersionHelper.getName(mApp.targetSdkVersion)));
+        viewBinding.minSdkItemView.setText(String.format(Locale.getDefault(), "%d (%s)", mApp.minSdkVersion, AndroidVersionHelper.getName(mApp.minSdkVersion)));
+        viewBinding.versionItemView.setText(String.valueOf(mApp.versionCode));
+        viewBinding.versionNameItemView.setText(mApp.versionName);
+        viewBinding.timeItemView.setText(mApp.time);
 
-        mReleaseTV.setText(String.format("Release: %s", (mApp.isDebug ? "false" : "true")));
-        mSystemTV.setText(String.format("System: %s", (mApp.isSystem ? "true" : "false")));
+        viewBinding.releaseItemView.setText(String.valueOf(mApp.isDebug));
+        viewBinding.systemItemView.setText(String.valueOf(mApp.isSystem));
 
-        mPathTV.setText(String.format("APK Path: %s", mApp.apkPath));
-        mSizeTV.setText(String.format("APK Size: %s", Formatter.formatFileSize(this, new File(mApp.apkPath).length())));
+        viewBinding.pathItemView.setText(mApp.apkPath);
+        viewBinding.sizeItemView.setText(Formatter.formatFileSize(this, new File(mApp.apkPath).length()));
+    }
+
+    private void initView() {
+        viewBinding.fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mApp.isFormFile) {
+                    createApk(mApp.name + "_" + mApp.versionName + ".apk");
+                }
+            }
+        });
+
+        viewBinding.logoImg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mApp.launch != null && !mApp.isFormFile) {
+                    startActivity(mApp.launch);
+                }
+            }
+        });
+
+        viewBinding.logoImg.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (!mApp.isFormFile) {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    intent.setData(Uri.fromParts("package", mApp.packageName, null));
+                    startActivity(intent);
+                }
+                return true;
+            }
+        });
     }
 
     private void setColors(Bitmap bitmap, boolean recycle) {
@@ -164,15 +196,15 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
                 Palette.Swatch swatch = palette.getDominantSwatch();
                 if (swatch != null) {
                     int color = swatch.getRgb();
-                    mToolbarLayout.setBackgroundColor(color);
-                    mToolbarLayout.setContentScrimColor(color);
-                    mToolbarLayout.setStatusBarScrimColor(color);
+                    viewBinding.toolbarLayout.setBackgroundColor(color);
+                    viewBinding.toolbarLayout.setContentScrimColor(color);
+                    viewBinding.toolbarLayout.setStatusBarScrimColor(color);
                     int titleColor = swatch.getTitleTextColor();
-                    mToolbar.setTitleTextColor(titleColor);
-                    mToolbar.setNavigationIcon(DrawableHelper.tintDrawable(this, R.drawable.ic_arrow_back_white_24dp, ColorStateList.valueOf(titleColor), null));
-                    mToolbarLayout.setExpandedTitleColor(titleColor);
-                    mToolbarLayout.setCollapsedTitleTextColor(titleColor);
-                    mToolbar.getMenu().getItem(0).setIcon(DrawableHelper.tintDrawable(this, R.drawable.ic_export, ColorStateList.valueOf(titleColor), null));
+                    viewBinding.toolbar.setTitleTextColor(titleColor);
+                    viewBinding.toolbar.setNavigationIcon(DrawableHelper.tintDrawable(this, R.drawable.ic_arrow_back_white_24dp, ColorStateList.valueOf(titleColor), null));
+                    viewBinding.toolbarLayout.setExpandedTitleColor(titleColor);
+                    viewBinding.toolbarLayout.setCollapsedTitleTextColor(titleColor);
+                    viewBinding.toolbar.getMenu().getItem(0).setIcon(DrawableHelper.tintDrawable(this, R.drawable.ic_export, ColorStateList.valueOf(titleColor), null));
                 }
                 swatch = palette.getLightVibrantSwatch();
                 if (swatch == null) {
@@ -182,76 +214,26 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
                     swatch = palette.getDarkVibrantSwatch();
                 }
                 if (swatch != null) {
-                    mFab.setSupportBackgroundTintList(ColorStateList.valueOf(swatch.getRgb()));
-                    mFab.setSupportImageTintList(ColorStateList.valueOf(swatch.getTitleTextColor()));
+                    ViewCompat.setBackgroundTintList(viewBinding.fab, ColorStateList.valueOf(swatch.getRgb()));
+                    ImageViewCompat.setImageTintList(viewBinding.fab, ColorStateList.valueOf(swatch.getTitleTextColor()));
                 }
             }
         });
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_COPY && resultCode == RESULT_OK && data != null) {
-            if (mDialog != null) {
-                dismissDialog();
-            }
-            mDialog = new NumberProgressDialog.Builder(DetailActivity.this)
-                    .cancelable(false)
-                    .canceledOnTouchOutside(false)
-                    .title(R.string.copying)
-                    .negative(R.string.cancel)
-                    .onNegative(new BaseDialog.OnButtonClickListener() {
-                        @Override
-                        public void onClick(@NonNull BaseDialog dialog, int which) {
-                            if (mSaveDisposable != null && !mSaveDisposable.isDisposed()) {
-                                mSaveDisposable.dispose();
-                            }
-                        }
-                    }).show();
-            mSaveDisposable = mPresenter.saveApk(this, mApp, data.getData());
-        }
-    }
-
-    @OnClick(R.id.fab)
-    public void onFab() {
-        if (!mApp.isFormFile) {
-            createApk(mApp.name + "_" + mApp.versionName + ".apk");
-        }
-    }
-
-    @OnClick(R.id.logo_img)
-    public void onLogo() {
-        if (mApp.launch != null && !mApp.isFormFile) {
-            startActivity(mApp.launch);
-        }
-    }
-
-    @OnLongClick(R.id.logo_img)
-    public void onSetting() {
-        if (!mApp.isFormFile) {
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(Uri.fromParts("package", mApp.packageName, null));
-            startActivity(intent);
-        }
-    }
-
     private void createApk(String fileName) {
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/vnd.android.package-archive");
-        intent.putExtra(Intent.EXTRA_TITLE, fileName);
-        startActivityForResult(intent, REQUEST_COPY);
+        mCreateApkLauncher.launch(fileName);
     }
 
-    private void addChildView(String str) {
-        AppCompatTextView textView = new AppCompatTextView(this);
+    private void addChildView(String title, String value, boolean isModuleFirst) {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.setMarginStart(SizeUtil.dp2pxSize(this, 6));
-        params.topMargin = SizeUtil.dp2pxSize(this, 4);
-        textView.setTextIsSelectable(true);
-        textView.setText(str);
-        mInfoParent.addView(textView, params);
+        params.topMargin = SizeUtil.dp2pxSize(this, isModuleFirst ? 12 : 4);
+        InfoItemView itemView = new InfoItemView(this);
+        itemView.setTextIsSelectable(true);
+        itemView.setTitle(title);
+        itemView.setText(value);
+        viewBinding.infoParent.addView(itemView, params);
     }
 
     private void addParentView(String str) {
@@ -261,7 +243,7 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
         textView.setTextSize(15);
         textView.setText(str);
         textView.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
-        mInfoParent.addView(textView, params);
+        viewBinding.infoParent.addView(textView, params);
     }
 
     private void addParent2View(String str) {
@@ -272,7 +254,7 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
         textView.setTextSize(15);
         textView.setText(str);
         textView.setTextColor(ContextCompat.getColor(this, R.color.blue500));
-        mInfoParent.addView(textView, params);
+        viewBinding.infoParent.addView(textView, params);
     }
 
     private void dismissDialog() {
@@ -283,22 +265,34 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
     }
 
     @Override
+    public void finishAfterTransition() {
+        viewBinding.fab.setVisibility(View.GONE);
+        super.finishAfterTransition();
+    }
+
+    @Override
     public void getSignatureSuccess(Sign sign) {
         if (sign.md5 != null) {
             for (int i = 0; i < sign.md5.length; i++) {
                 addParent2View(getString(R.string.signature, i + 1));
-                addChildView("MD5: " + sign.md5[i]);
-                addChildView("SHA1: " + sign.sha1[i]);
-                addChildView("SHA256: " + sign.sha256[i]);
+                addChildView("MD5:", sign.md5[i][0], false);
+                addChildView("MD5 Base64:", sign.md5[i][1], false);
+                addChildView("SHA1:", sign.sha1[i][0], true);
+                addChildView("SHA1 Base64:", sign.sha1[i][1], false);
+                addChildView("SHA256:", sign.sha256[i][0], true);
+                addChildView("SHA256 Base64:", sign.sha256[i][1], false);
             }
         }
         if (sign.hasHistory) {
             addParentView(getString(R.string.history_signing));
             for (int i = 0; i < sign.historyMD5.length; i++) {
                 addParent2View(getString(R.string.signature, i + 1));
-                addChildView("MD5: " + sign.historyMD5[i]);
-                addChildView("SHA1: " + sign.historySHA1[i]);
-                addChildView("SHA256: " + sign.historySHA256[i]);
+                addChildView("MD5:", sign.historyMD5[i][0], false);
+                addChildView("MD5 Base64:", sign.historyMD5[i][1], false);
+                addChildView("SHA1:", sign.historySHA1[i][0], true);
+                addChildView("SHA1 Base64:", sign.historySHA1[i][1], false);
+                addChildView("SHA256:", sign.historySHA256[i][0], true);
+                addChildView("SHA256 Base64:", sign.historySHA256[i][1], false);
             }
         }
     }
@@ -318,6 +312,10 @@ public class DetailActivity extends BaseActivity implements DetailActivityPresen
     @Override
     public void saveSuccess(String path) {
         dismissDialog();
+        if (TextUtils.isEmpty(path)) {
+            Toast.makeText(this, "export apk file success", Toast.LENGTH_SHORT).show();
+            return;
+        }
         Toast.makeText(this, "success: " + path, Toast.LENGTH_SHORT).show();
     }
 
