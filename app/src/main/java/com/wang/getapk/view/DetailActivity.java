@@ -148,7 +148,7 @@ public class DetailActivity extends BaseActivity<ActivityDetailBinding> implemen
         viewBinding.versionNameItemView.setText(mApp.versionName);
         viewBinding.timeItemView.setText(mApp.time);
 
-        viewBinding.releaseItemView.setText(String.valueOf(mApp.isDebug));
+        viewBinding.releaseItemView.setText(String.valueOf(!mApp.isDebug));
         viewBinding.systemItemView.setText(String.valueOf(mApp.isSystem));
 
         viewBinding.pathItemView.setText(mApp.apkPath);
