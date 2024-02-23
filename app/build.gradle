@@ -23,19 +23,19 @@ android {
             storePassword 'wxj19931028'
         }
 
-        debug {
-            keyAlias 'kingwang666'
-            keyPassword 'wxj19931028'
-            storeFile file('../../../../kingwang666.jks')
-            storePassword 'wxj19931028'
-        }
+//        debug {
+//            keyAlias 'kingwang666'
+//            keyPassword 'wxj19931028'
+//            storeFile file('../../../../kingwang666.jks')
+//            storePassword 'wxj19931028'
+//        }
     }
 
     buildTypes {
         debug {
             minifyEnabled false
             shrinkResources false
-            signingConfig signingConfigs.debug
+//            signingConfig signingConfigs.debug
         }
         release {
             minifyEnabled true
