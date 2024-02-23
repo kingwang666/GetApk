@@ -36,4 +36,7 @@
     <string name="detail_path">APK Path:</string>
     <string name="detail_size">APK Size:</string>
     <string name="export">导出</string>
+    <string name="saveing">保存中</string>
+    <string name="select_all">选择全部( %d/%d )</string>
+    <string name="multi_choice">多选</string>
 </resources>
