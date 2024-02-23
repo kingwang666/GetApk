@@ -1,10 +1,13 @@
 package com.wang.getapk.view.dialog;
 
 import android.content.Context;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
+import androidx.appcompat.widget.AppCompatTextView;
 
+import com.wang.getapk.R;
 import com.wang.getapk.databinding.DialogNumberProgressBinding;
 
 /**
@@ -30,7 +33,15 @@ public class NumberProgressDialog extends BaseDialog<NumberProgressDialog.Builde
 
     @Override
     protected void afterView(Context context, Builder builder) {
-
+        AppCompatTextView titleTV = viewBinding.getRoot().findViewById(R.id.title_tv);
+        titleTV.setText(builder.title);
+        setButton(viewBinding.negativeBtn, builder.negative);
+        viewBinding.negativeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNegative();
+            }
+        });
     }
 
     public static class Builder extends BaseBuilder<Builder> {

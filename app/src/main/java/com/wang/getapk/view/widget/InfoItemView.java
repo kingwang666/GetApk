@@ -16,6 +16,7 @@ import androidx.annotation.StringRes;
 import androidx.annotation.StyleRes;
 import androidx.appcompat.widget.AppCompatTextView;
 
+import com.google.android.material.textview.MaterialTextView;
 import com.wang.getapk.R;
 
 /**
@@ -23,8 +24,8 @@ import com.wang.getapk.R;
  */
 public class InfoItemView extends LinearLayout {
 
-    private AppCompatTextView mTitleTextView;
-    private AppCompatTextView mTextView;
+    private MaterialTextView mTitleTextView;
+    private MaterialTextView mTextView;
 
     boolean mTextIsSelectable;
 
@@ -75,6 +76,7 @@ public class InfoItemView extends LinearLayout {
         if (a.hasValue(R.styleable.InfoItemView_android_textColor)) {
             setTextColor(a.getColorStateList(R.styleable.InfoItemView_android_textColor));
         }
+        a.recycle();
     }
 
     private boolean isChild(View child) {
@@ -95,7 +97,7 @@ public class InfoItemView extends LinearLayout {
         if (!TextUtils.isEmpty(title)) {
             if (mTitleTextView == null) {
                 final Context context = getContext();
-                mTitleTextView = new AppCompatTextView(context);
+                mTitleTextView = new MaterialTextView(context);
                 if (mTitleTextAppearance != 0) {
                     mTitleTextView.setTextAppearance(context, mTitleTextAppearance);
                 }
@@ -138,7 +140,7 @@ public class InfoItemView extends LinearLayout {
         if (!TextUtils.isEmpty(text)) {
             if (mTextView == null) {
                 final Context context = getContext();
-                mTextView = new AppCompatTextView(context);
+                mTextView = new MaterialTextView(context);
                 mTextView.setTextIsSelectable(mTextIsSelectable);
                 if (mTextAppearance != 0) {
                     mTextView.setTextAppearance(context, mTextAppearance);

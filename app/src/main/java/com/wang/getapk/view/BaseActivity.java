@@ -47,10 +47,12 @@ public abstract class BaseActivity<T extends ViewBinding> extends AppCompatActiv
         return new AutoGrayThemeHelper(view, context, AutoGrayThemeHelper.QINGMING_CHECKER);
     }
 
-    protected final void applyOrRemoveGrayTheme() {
-        if (mGrayThemeHelper != null) {
-            mGrayThemeHelper.applyOrRemoveGrayTheme();
+    @Override
+    public boolean onSupportNavigateUp() {
+        if (!super.onSupportNavigateUp()) {
+            getOnBackPressedDispatcher().onBackPressed();
         }
+        return true;
     }
 
     @Override

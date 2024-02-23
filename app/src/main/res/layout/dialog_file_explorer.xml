@@ -10,7 +10,6 @@
         android:layout_width="match_parent"
         android:background="@color/colorPrimary"
         android:layout_height="?attr/actionBarSize"
-        app:titleTextAppearance="@style/ToolbarTitleStyle"
         app:titleTextColor="@android:color/white">
 
     </androidx.appcompat.widget.Toolbar>

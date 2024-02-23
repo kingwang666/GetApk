@@ -1,5 +1,9 @@
 package com.wang.getapk.repository;
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
 import com.wang.baseadapter.model.ItemArray;
 import com.wang.baseadapter.model.ItemData;
 import com.wang.getapk.model.App;
@@ -13,7 +17,10 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.rxjava3.functions.Function;
 
@@ -25,37 +32,38 @@ import io.reactivex.rxjava3.functions.Function;
 
 public class SortFunction implements Function<List<App>, ItemArray> {
 
-    private final DateFormat mDateFormat;
     private final boolean mSortByTime;
 
-    public SortFunction(DateFormat dateFormat, boolean sortByTime) {
-        mDateFormat = dateFormat;
+    public SortFunction(boolean sortByTime) {
         mSortByTime = sortByTime;
     }
 
     @Override
     public ItemArray apply(List<App> apps) throws Exception {
         ItemArray itemArray = new ItemArray();
-        List<Object> stickies = new ArrayList<>();
+        HashSet<String> stickies = new HashSet<>();
         for (App app : apps) {
             if (mSortByTime) {
-                StickyTime sticky = new StickyTime(app.time.substring(0, 7));
-                if (!stickies.contains(sticky)) {
+                String stickyContent = app.time.substring(0, 7);
+                if (!stickies.contains(stickyContent)) {
+                    StickyTime sticky = new StickyTime(stickyContent);
                     Calendar calendar = Calendar.getInstance();
-                    calendar.setTime(mDateFormat.parse(app.time));
+                    calendar.setTime(new Date(app.lastUpdateTime));
                     calendar.set(Calendar.DAY_OF_MONTH, 0);
                     calendar.set(Calendar.HOUR_OF_DAY, 0);
                     calendar.set(Calendar.MINUTE, 0);
                     calendar.set(Calendar.SECOND, 0);
+                    calendar.set(Calendar.MILLISECOND, 0);
                     calendar.add(Calendar.MONTH, 1);
                     sticky.lastUpdateTime = calendar.getTimeInMillis() + 24 * 60 * 60 * 1000 - 1;
-                    stickies.add(sticky);
+                    stickies.add(stickyContent);
                     itemArray.add(new ItemData(AppAdapter.TYPE_STICKY, sticky));
                 }
             } else {
-                StickyPinyin sticky = new StickyPinyin(app.namePinyin.isEmpty() ? null : app.namePinyin.substring(0, 1));
-                if (!stickies.contains(sticky)) {
-                    stickies.add(sticky);
+                String stickyContent = app.namePinyin.isEmpty() ? "" : app.namePinyin.substring(0, 1).toUpperCase();
+                if (!stickies.contains(stickyContent)) {
+                    StickyPinyin sticky = new StickyPinyin(stickyContent);
+                    stickies.add(stickyContent);
                     itemArray.add(new ItemData(AppAdapter.TYPE_STICKY, sticky));
                 }
             }

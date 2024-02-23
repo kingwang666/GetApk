@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Widget.GetApk.AppBarLayout" parent="Widget.Material3.AppBarLayout">
+        <item name="android:outlineAmbientShadowColor">@null</item>
+        <item name="android:outlineSpotShadowColor">@null</item>
+    </style>
+
+    <style name="Widget.GetApk.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="android:outlineAmbientShadowColor">@null</item>
+        <item name="android:outlineSpotShadowColor">@null</item>
+    </style>
+</resources>

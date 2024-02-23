@@ -34,4 +34,9 @@
     <string name="detail_system">System:</string>
     <string name="detail_path">APK Path:</string>
     <string name="detail_size">APK Size:</string>
+    <string name="apk" translatable="false">Import apk</string>
+    <string name="export">Export</string>
+    <string name="saveing">Saving</string>
+    <string name="select_all">Select All ( %d/%d )</string>
+    <string name="multi_choice">Multiple choice</string>
 </resources>

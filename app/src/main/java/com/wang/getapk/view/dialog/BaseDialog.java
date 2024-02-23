@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 
 import com.wang.getapk.R;
@@ -36,14 +37,6 @@ public abstract class BaseDialog<Builder extends BaseBuilder<?>, VB extends View
     public @interface DialogAction {
     }
 
-    @Nullable
-    private AppCompatTextView mTitleTV;
-    @Nullable
-    private AppCompatButton mNeutralBtn;
-    @Nullable
-    private AppCompatButton mNegativeBtn;
-    @Nullable
-    private AppCompatButton mPositiveBtn;
 
     private CompositeDisposable mCompositeDisposable;
     Builder mBuilder;
@@ -70,43 +63,12 @@ public abstract class BaseDialog<Builder extends BaseBuilder<?>, VB extends View
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         viewBinding = getViewBinding();
         setContentView(viewBinding.getRoot());
         mGrayThemeHelper = createGrayThemeHelper(getWindow().getDecorView(), getContext());
-        initCommonView();
         initViewListener();
         afterView(mBuilder.context, mBuilder);
-    }
-
-    private void initViews(View view) {
-        mTitleTV = view.findViewById(R.id.title_tv);
-        mNeutralBtn = view.findViewById(R.id.neutral_btn);
-        mNegativeBtn = view.findViewById(R.id.negative_btn);
-        mPositiveBtn = view.findViewById(R.id.positive_btn);
-        if (mNeutralBtn != null) {
-            mNeutralBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onNeutral();
-                }
-            });
-        }
-        if (mNegativeBtn != null) {
-            mNegativeBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onNegative();
-                }
-            });
-        }
-        if (mPositiveBtn != null) {
-            mPositiveBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onPositive();
-                }
-            });
-        }
     }
 
     @Nullable
@@ -123,19 +85,7 @@ public abstract class BaseDialog<Builder extends BaseBuilder<?>, VB extends View
         }
     }
 
-    private void initCommonView() {
-        if (mTitleTV != null) {
-            if (mBuilder.titleColorSet) {
-                mTitleTV.setTextColor(mBuilder.titleColor);
-            }
-            mTitleTV.setText(mBuilder.title);
-        }
-        setButton(mPositiveBtn, mBuilder.positive);
-        setButton(mNegativeBtn, mBuilder.negative);
-        setButton(mNeutralBtn, mBuilder.neutral);
-    }
-
-    private void setButton(Button button, CharSequence name) {
+    protected void setButton(Button button, CharSequence name) {
         if (button != null) {
             if (TextUtils.isEmpty(name)) {
                 button.setVisibility(View.GONE);

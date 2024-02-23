@@ -9,12 +9,6 @@
 
     <include layout="@layout/layout_dialog_title" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1px"
-        android:layout_marginTop="16dp"
-        android:background="@color/grey300" />
-
     <com.daimajia.numberprogressbar.NumberProgressBar
         android:id="@+id/progress_bar"
         android:layout_width="match_parent"

@@ -35,4 +35,5 @@
     <string name="detail_system">System:</string>
     <string name="detail_path">APK Path:</string>
     <string name="detail_size">APK Size:</string>
+    <string name="export">导出</string>
 </resources>

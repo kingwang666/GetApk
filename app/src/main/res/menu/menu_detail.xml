@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <item
-        android:id="@+id/credit_menu"
-        android:title="导出"
-        app:showAsAction="always"
+        android:id="@+id/export"
+        android:title="@string/export"
         android:visible="false"
-        tools:visible="true"/>
+        app:showAsAction="always"
+        tools:visible="true" />
 
 </menu>

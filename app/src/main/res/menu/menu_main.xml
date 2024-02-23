@@ -4,9 +4,15 @@
 
     <item
         android:id="@+id/apk"
-        android:title="apk"
+        android:title="@string/apk"
         android:icon="@drawable/ic_import"
-        app:showAsAction="always"/>
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/multi_choice"
+        android:title="@string/multi_choice"
+        android:icon="@drawable/ic_multi_choice"
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/sort"

@@ -4,14 +4,13 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.text.format.Formatter;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -24,17 +23,26 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.MenuItemCompat;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.core.widget.ImageViewCompat;
 import androidx.palette.graphics.Palette;
 
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
+import com.google.android.material.color.MaterialColors;
 import com.wang.getapk.R;
+import com.wang.getapk.constant.MimeType;
 import com.wang.getapk.databinding.ActivityDetailBinding;
+import com.wang.getapk.glide.GlideApp;
 import com.wang.getapk.model.App;
 import com.wang.getapk.model.Sign;
 import com.wang.getapk.presenter.DetailActivityPresenter;
 import com.wang.getapk.util.AndroidVersionHelper;
-import com.wang.getapk.util.DrawableHelper;
 import com.wang.getapk.util.SizeUtil;
 import com.wang.getapk.view.dialog.BaseDialog;
 import com.wang.getapk.view.dialog.NumberProgressDialog;
@@ -59,7 +67,7 @@ public class DetailActivity extends BaseActivity<ActivityDetailBinding> implemen
     private NumberProgressDialog mDialog;
     private boolean mCollapsed;
 
-    private final ActivityResultLauncher<String> mCreateApkLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/vnd.android.package-archive"), new ActivityResultCallback<Uri>() {
+    private final ActivityResultLauncher<String> mSaveFileLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument(MimeType.APK), new ActivityResultCallback<Uri>() {
         @Override
         public void onActivityResult(Uri result) {
             if (result == null) {
@@ -90,6 +98,7 @@ public class DetailActivity extends BaseActivity<ActivityDetailBinding> implemen
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(ActivityDetailBinding.inflate(getLayoutInflater()));
+        setSupportActionBar(viewBinding.toolbar);
         initView();
 
         mApp = getIntent().getParcelableExtra("app");
@@ -97,28 +106,21 @@ public class DetailActivity extends BaseActivity<ActivityDetailBinding> implemen
         mPresenter = new DetailActivityPresenter(this);
         mDisposable = mPresenter.getSignature(this, mApp.isFormFile ? mApp.apkPath : mApp.packageName, mApp.isFormFile);
 
-        final Drawable drawable = mApp.applicationInfo.loadIcon(getPackageManager());
-        viewBinding.logoImg.setImageDrawable(drawable);
-        viewBinding.toolbar.setTitle(mApp.name);
-        viewBinding.toolbar.inflateMenu(R.menu.menu_detail);
-        if (drawable instanceof BitmapDrawable) {
-            setColors(((BitmapDrawable) drawable).getBitmap(), false);
-        } else {
-            int width = drawable.getIntrinsicWidth();
-            int height = drawable.getIntrinsicHeight();
-            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(bitmap);
-            drawable.setBounds(0, 0, width, height);
-            drawable.draw(canvas);
-            canvas.setBitmap(null);
-            setColors(bitmap, true);
-        }
-        viewBinding.toolbar.setOnMenuItemClickListener(item -> {
-            if (!mApp.isFormFile) {
-                createApk(mApp.name + "_" + mApp.versionName + ".apk");
+        GlideApp.with(this).asBitmap().load(mApp.applicationInfo).addListener(new RequestListener<Bitmap>() {
+            @Override
+            public boolean onLoadFailed(@Nullable GlideException e, @Nullable Object model, @NonNull Target<Bitmap> target, boolean isFirstResource) {
+                return false;
             }
-            return true;
-        });
+
+            @Override
+            public boolean onResourceReady(@NonNull Bitmap resource, @NonNull Object model, Target<Bitmap> target, @NonNull DataSource dataSource, boolean isFirstResource) {
+                setColors(resource);
+                return false;
+            }
+        }).into(viewBinding.logoImg);
+        setTitle(mApp.name);
+
+
         viewBinding.appBar.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
             if (-verticalOffset >= appBarLayout.getTotalScrollRange()) {
                 if (!mCollapsed) {
@@ -134,7 +136,6 @@ public class DetailActivity extends BaseActivity<ActivityDetailBinding> implemen
             }
 
         });
-        viewBinding.toolbar.setNavigationOnClickListener(v -> onBackPressed());
         viewBinding.packageItemView.setText(mApp.packageName);
         ComponentName name = null;
         if (mApp.launch != null) {
@@ -160,7 +161,7 @@ public class DetailActivity extends BaseActivity<ActivityDetailBinding> implemen
             @Override
             public void onClick(View v) {
                 if (!mApp.isFormFile) {
-                    createApk(mApp.name + "_" + mApp.versionName + ".apk");
+                    saveApk(mApp.getSaveName());
                 }
             }
         });
@@ -187,11 +188,8 @@ public class DetailActivity extends BaseActivity<ActivityDetailBinding> implemen
         });
     }
 
-    private void setColors(Bitmap bitmap, boolean recycle) {
+    private void setColors(Bitmap bitmap) {
         Palette.from(bitmap).generate(palette -> {
-            if (recycle) {
-                bitmap.recycle();
-            }
             if (palette != null) {
                 Palette.Swatch swatch = palette.getDominantSwatch();
                 if (swatch != null) {
@@ -199,12 +197,14 @@ public class DetailActivity extends BaseActivity<ActivityDetailBinding> implemen
                     viewBinding.toolbarLayout.setBackgroundColor(color);
                     viewBinding.toolbarLayout.setContentScrimColor(color);
                     viewBinding.toolbarLayout.setStatusBarScrimColor(color);
-                    int titleColor = swatch.getTitleTextColor();
+                    int titleColor = swatch.getBodyTextColor();
+                    WindowInsetsControllerCompat windowInsetsControllerCompat = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+                    windowInsetsControllerCompat.setAppearanceLightStatusBars(!MaterialColors.isColorLight(titleColor));
                     viewBinding.toolbar.setTitleTextColor(titleColor);
-                    viewBinding.toolbar.setNavigationIcon(DrawableHelper.tintDrawable(this, R.drawable.ic_arrow_back_white_24dp, ColorStateList.valueOf(titleColor), null));
+                    viewBinding.toolbar.setNavigationIconTint(titleColor);
                     viewBinding.toolbarLayout.setExpandedTitleColor(titleColor);
                     viewBinding.toolbarLayout.setCollapsedTitleTextColor(titleColor);
-                    viewBinding.toolbar.getMenu().getItem(0).setIcon(DrawableHelper.tintDrawable(this, R.drawable.ic_export, ColorStateList.valueOf(titleColor), null));
+                    MenuItemCompat.setIconTintList(viewBinding.toolbar.getMenu().getItem(0), ColorStateList.valueOf(titleColor));
                 }
                 swatch = palette.getLightVibrantSwatch();
                 if (swatch == null) {
@@ -221,8 +221,8 @@ public class DetailActivity extends BaseActivity<ActivityDetailBinding> implemen
         });
     }
 
-    private void createApk(String fileName) {
-        mCreateApkLauncher.launch(fileName);
+    private void saveApk(String fileName) {
+        mSaveFileLauncher.launch(fileName);
     }
 
     private void addChildView(String title, String value, boolean isModuleFirst) {
@@ -255,6 +255,24 @@ public class DetailActivity extends BaseActivity<ActivityDetailBinding> implemen
         textView.setText(str);
         textView.setTextColor(ContextCompat.getColor(this, R.color.blue500));
         viewBinding.infoParent.addView(textView, params);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.menu_detail, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.export) {
+            if (!mApp.isFormFile) {
+                saveApk(mApp.getSaveName());
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void dismissDialog() {

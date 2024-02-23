@@ -3,16 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/white"
     android:orientation="vertical">
 
     <include layout="@layout/layout_dialog_title" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1px"
-        android:layout_marginTop="16dp"
-        android:background="@color/grey300" />
 
     <ProgressBar
         android:id="@+id/progress_bar"
@@ -28,6 +23,14 @@
         android:layout_height="1px"
         android:layout_marginTop="20dp"
         android:background="@color/grey300" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/negative_btn"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackground"
+        tools:text="@string/cancel"/>
+
 
 
 </LinearLayout>

@@ -8,6 +8,8 @@ import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.wang.getapk.util.HanziToPinyin;
 
 /**
@@ -48,6 +50,8 @@ public class App implements Parcelable {
     public String time;
 
     public Intent launch;
+
+    public transient boolean isSelected;
 
 
     public App(PackageInfo info, PackageManager pm) {
@@ -95,6 +99,10 @@ public class App implements Parcelable {
         lastUpdateTime = in.readLong();
         time = in.readString();
         launch = in.readParcelable(Intent.class.getClassLoader());
+    }
+
+    public String getSaveName(){
+        return name + "_" + versionName + ".apk";
     }
 
     @Override

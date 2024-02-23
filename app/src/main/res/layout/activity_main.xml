@@ -6,16 +6,17 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorPrimary"
         android:elevation="3dp"
         app:title="Apps"
-        app:titleTextColor="@android:color/white">
+        app:titleTextColor="@android:color/white"
+        tools:menu="@menu/menu_main">
 
-    </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -32,11 +33,41 @@
                 android:id="@+id/recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:clipToPadding="false"
                 android:scrollbarStyle="insideInset">
 
             </androidx.recyclerview.widget.RecyclerView>
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <FrameLayout
+            android:id="@+id/select_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@android:color/white"
+            android:elevation="12dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/all_checkbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                tools:text="@string/select_all" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/export_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginVertical="8dp"
+                android:layout_marginEnd="32dp"
+                android:enabled="false"
+                android:text="@string/export" />
+
+        </FrameLayout>
 
         <com.wang.baseadapter.widget.WaveSideBarView
             android:id="@+id/side_bar_view"
@@ -44,12 +75,12 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
+            android:translationZ="12dp"
             android:visibility="gone"
             app:sidebarAutoHide="true"
             app:sidebarLetters="@array/letters"
             app:sidebarShowDuration="1500"
             tools:visibility="visible" />
     </FrameLayout>
-
 
 </LinearLayout>

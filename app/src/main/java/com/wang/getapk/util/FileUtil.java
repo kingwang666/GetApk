@@ -8,6 +8,7 @@ import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.CancellationSignal;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.DocumentsContract;
@@ -27,6 +28,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Locale;
 import java.util.regex.Pattern;
+
+import io.reactivex.rxjava3.disposables.Disposable;
 
 
 /**
@@ -167,7 +170,8 @@ public class FileUtil {
         return dst;
     }
 
-    public static void copy(ContentResolver resolver, Uri source, Uri dest, OnCopyListener listener) throws IOException {
+
+    public static void copy(ContentResolver resolver, Uri source, Uri dest, Disposable disposable, OnCopyListener listener) throws IOException {
 
         FileInputStream in = null;
         OutputStream out = null;
@@ -187,11 +191,13 @@ public class FileUtil {
                 throw new IOException("open the dest file failed");
             }
             // Transfer bytes from in to out
-            byte[] buf = new byte[1024 * 4];
+            byte[] buf = new byte[1024 * 8];
             int len;
-            Thread thread = Thread.currentThread();
-            while ((len = in.read(buf)) > 0) {
-                if (thread.isInterrupted()) {
+            while ((len = in.read(buf)) >= 0) {
+                if (len == 0){
+                    continue;
+                }
+                if (disposable != null && disposable.isDisposed()) {
                     break;
                 }
                 sum += len;

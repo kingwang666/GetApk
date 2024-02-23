@@ -2,6 +2,7 @@ package com.wang.getapk.repository;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -13,9 +14,14 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.TextUtils;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
+import android.util.ArrayMap;
+
+import androidx.documentfile.provider.DocumentFile;
 
 import com.wang.baseadapter.model.ItemArray;
+import com.wang.getapk.constant.MimeType;
 import com.wang.getapk.model.App;
 import com.wang.getapk.model.FileItem;
 import com.wang.getapk.model.Sign;
@@ -26,6 +32,7 @@ import com.wang.getapk.view.listener.OnCopyListener;
 import org.reactivestreams.Publisher;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.lang.ref.WeakReference;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -52,7 +59,7 @@ public class LocalRepository {
 
     private static volatile LocalRepository sInstance;
 
-    private List<App> mApps;
+    private List<App> mApps = Collections.emptyList();
 
     private final Handler mHandler;
     private final ReadWriteLock mLock = new ReentrantReadWriteLock();
@@ -76,62 +83,67 @@ public class LocalRepository {
     }
 
     private Publisher<List<App>> getApps(Context context, final DateFormat dateFormat) {
-        return Flowable.just(new WeakReference<>(context))
-                .map(new Function<WeakReference<Context>, List<App>>() {
+        return Flowable.just(context)
+                .map(new Function<Context, List<App>>() {
                     @Override
-                    public List<App> apply(WeakReference<Context> weakContext) throws Exception {
-                        final PackageManager pm = weakContext.get().getPackageManager();
+                    public List<App> apply(Context context) throws Exception {
+                        final PackageManager pm = context.getPackageManager();
                         List<PackageInfo> infos = pm.getInstalledPackages(0);
-                        List<App> apps = new ArrayList<>();
-                        for (PackageInfo info : infos) {
-                            App app = new App(info, pm);
-                            app.isFormFile = false;
-                            Date date = new Date(info.lastUpdateTime);
-                            app.time = dateFormat.format(date);
-                            apps.add(app);
+                        mLock.writeLock().lock();
+                        List<App> apps = new ArrayList<>(infos.size());
+                        try {
+                            for (PackageInfo info : infos) {
+                                App app = new App(info, pm);
+                                app.isFormFile = false;
+                                Date date = new Date(info.lastUpdateTime);
+                                app.time = dateFormat.format(date);
+                                apps.add(app);
+                            }
+                            mApps = Collections.unmodifiableList(apps);
+                        } finally {
+                            mLock.writeLock().unlock();
                         }
-                        setApps(apps);
                         return apps;
                     }
                 });
     }
 
     public Disposable getAndSort(Context context, final boolean sortByTime, final DateFormat dateFormat, KWSubscriber<ItemArray> subscriber) {
-        return Flowable.just(new WeakReference<>(context))
-                .flatMap(new Function<WeakReference<Context>, Publisher<List<App>>>() {
+        return Flowable.just(context)
+                .flatMap(new Function<Context, Publisher<List<App>>>() {
                     @Override
-                    public Publisher<List<App>> apply(WeakReference<Context> weakContext) throws Exception {
+                    public Publisher<List<App>> apply(Context context) throws Exception {
                         List<App> apps = getApps();
-                        if (apps == null) {
-                            return getApps(weakContext.get(), dateFormat);
+                        if (apps == null || apps.isEmpty()) {
+                            return getApps(context, dateFormat);
                         } else {
                             return Flowable.just(apps);
                         }
                     }
                 })
-                .map(new SortFunction(dateFormat, sortByTime))
+                .map(new SortFunction(sortByTime))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(subscriber);
     }
 
     public Disposable getApp(Context context, final Uri path, KWSubscriber<App> subscriber) {
-        return Flowable.just(new WeakReference<>(context))
-                .map(weakContext -> {
-                    PackageManager pm = weakContext.get().getPackageManager();
+        return Flowable.just(context)
+                .map(it -> {
+                    PackageManager pm = it.getPackageManager();
                     String realPath;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                        File file = new File(weakContext.get().getExternalCacheDir(), "temp.apk");
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        File file = new File(it.getExternalCacheDir(), "temp.apk");
                         file.deleteOnExit();
                         realPath = file.getAbsolutePath();
-                        FileUtil.copy(weakContext.get().getContentResolver(), path, Uri.fromFile(new File(realPath)), null);
-                    }else {
-                        realPath = FileUtil.getPath(weakContext.get(), path);
+                        FileUtil.copy(it.getContentResolver(), path, Uri.fromFile(new File(realPath)), null, null);
+                    } else {
+                        realPath = FileUtil.getPath(it, path);
                     }
                     PackageInfo info;
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                         info = pm.getPackageArchiveInfo(realPath, PackageManager.PackageInfoFlags.of(0));
-                    }else {
+                    } else {
                         info = pm.getPackageArchiveInfo(realPath, 0);
                     }
                     if (info == null) {
@@ -273,37 +285,12 @@ public class LocalRepository {
                 .subscribeWith(subscriber);
     }
 
-    @Deprecated
-    public Disposable saveApk(App app, final String dest, final KWSubscriber<String> subscriber) {
-        return Flowable.just(app)
-                .map(new Function<App, String>() {
-                    @Override
-                    public String apply(App source) throws Exception {
-                        String fileName = source.name + "_" + source.versionName + ".apk";
-                        return FileUtil.copy(source.apkPath, dest, fileName, new OnCopyListener() {
-                            @Override
-                            public void inProgress(final float progress) {
-                                mHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        subscriber.inProgress(progress);
-                                    }
-                                });
-                            }
-                        }).getAbsolutePath();
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(subscriber);
-    }
-
     public Disposable saveApk(ContentResolver resolver, App app, final Uri dest, final KWSubscriber<Uri> subscriber) {
         return Flowable.just(app)
                 .map(new Function<App, Uri>() {
                     @Override
                     public Uri apply(App source) throws Exception {
-                        FileUtil.copy(resolver, Uri.fromFile(new File(source.apkPath)), dest, new OnCopyListener() {
+                        FileUtil.copy(resolver, Uri.fromFile(new File(source.apkPath)), dest, subscriber, new OnCopyListener() {
                             @Override
                             public void inProgress(final float progress) {
                                 mHandler.post(new Runnable() {
@@ -320,14 +307,58 @@ public class LocalRepository {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(subscriber);
+
     }
 
-    public void setApps(List<App> apps) {
-        mLock.writeLock().lock();
-        try {
-            mApps = apps;
-        } finally {
-            mLock.writeLock().unlock();
+    public Disposable saveApks(Context context, List<App> apps, final Uri dest, final KWSubscriber<Uri> subscriber) {
+        final DocumentFile dir = DocumentFile.fromTreeUri(context, dest);
+        if (dir == null || !dir.canWrite()) {
+            subscriber.onError(new IllegalStateException("can not write"));
+            return subscriber;
+        }
+        return Flowable.just(apps)
+                .map(new Function<List<App>, Uri>() {
+                    @Override
+                    public Uri apply(List<App> apps) throws Throwable {
+                        ContentResolver resolver = context.getContentResolver();
+                        for (App app : apps) {
+                            if (subscriber.isDisposed()) {
+                                break;
+                            }
+                            DocumentFile newFile = dir.createFile(MimeType.APK, app.getSaveName());
+                            try {
+                                if (newFile == null) {
+                                    throw new IllegalStateException("can not create file");
+                                }
+                                FileUtil.copy(resolver, Uri.fromFile(new File(app.apkPath)), newFile.getUri(), subscriber, null);
+                            } catch (Throwable e) {
+                                newFile.delete();
+                                throw e;
+                            }
+                        }
+                        return dir.getUri();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(subscriber);
+    }
+
+
+    public Uri getDownloadUri(ContentResolver resolver, String fileName, String mimeType, String relativePath) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Files.FileColumns.DISPLAY_NAME, fileName);
+            values.put(MediaStore.Files.FileColumns.MIME_TYPE, mimeType);
+            values.put(MediaStore.Files.FileColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + File.separator + relativePath);
+            Uri external = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+            return resolver.insert(external, values);
+        } else {
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), relativePath);
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+            return Uri.fromFile(new File(file, fileName));
         }
     }
 
@@ -339,4 +370,23 @@ public class LocalRepository {
             mLock.readLock().unlock();
         }
     }
+
+    public int appSize() {
+        mLock.readLock().lock();
+        try {
+            return mApps.size();
+        } finally {
+            mLock.readLock().unlock();
+        }
+    }
+
+    public void clearApps() {
+        mLock.writeLock().lock();
+        try {
+            mApps = Collections.emptyList();
+        } finally {
+            mLock.writeLock().unlock();
+        }
+    }
+
 }

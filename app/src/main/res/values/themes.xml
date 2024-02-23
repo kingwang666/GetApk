@@ -1,0 +1,30 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.GetApk" parent="Theme.Material3.Light.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:colorBackground">@android:color/white</item>
+        <item name="colorSurface">@android:color/white</item>
+
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="elevationOverlayColor">@android:color/transparent</item>
+        <item name="elevationOverlayAccentColor">@android:color/transparent</item>
+
+        <item name="appBarLayoutStyle">@style/Widget.GetApk.AppBarLayout</item>
+        <item name="toolbarStyle">@style/Widget.GetApk.Toolbar</item>
+        <item name="actionOverflowMenuStyle">@style/Widget.GetApk.PopupMenu.Overflow</item>
+        <item name="actionMenuTextAppearance">@style/TextAppearance.GetApk.Widget.ActionBar.Menu</item>
+
+        <item name="infoItemViewStyle">@style/Widget.GetApk.InfoItemView</item>
+    </style>
+
+    <style name="Theme.GetApk" parent="Base.Theme.GetApk" />
+
+    <style name="Theme.GetApk.Detail">
+        <!-- Customize your theme here. -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+</resources>
